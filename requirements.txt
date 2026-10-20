@@ -1,0 +1,29 @@
+# Training and evaluation (repository root). Falcon Studio has its own studio/requirements.txt.
+# Collected from the imports of audio_train.py, audio_visual_test.py, evaluated_mac_params.py,
+# DataPreProcess/ and look2hear/. TODO: pin exact versions from the training machine (pip freeze)
+# before release; they were not recorded with the checkpoints.
+torch>=1.13
+torchaudio
+torchvision
+pytorch-lightning
+numpy
+scipy
+pandas
+pyyaml
+soundfile
+tqdm
+rich
+packaging
+timm               # DropPath in look2hear/models/Falcon.py
+librosa            # look2hear/layers/stft.py
+torch-complex      # look2hear/layers/stft_tfgn.py
+typeguard          # look2hear/layers/stft_tfgn.py
+espnet             # look2hear/utils/nets_utils.py
+torch-optimizer    # look2hear/system/optimizers.py
+opencv-python      # look2hear/datas/transform.py
+matplotlib         # look2hear/datas (debug plots)
+fast-bss-eval      # metrics
+torch-mir-eval     # metrics
+pypesq             # PESQ in look2hear/metrics/allwrapper.py
+pystoi             # STOI in look2hear/metrics/allwrapper.py
+ptflops            # evaluated_mac_params.py

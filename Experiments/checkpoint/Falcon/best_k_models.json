@@ -1,0 +1,7 @@
+{
+  "${ROOT}/Falcon/epoch=714.ckpt": -9.984025001525879,
+  "${ROOT}/Falcon/epoch=735.ckpt": -9.98260498046875,
+  "${ROOT}/Falcon/epoch=738.ckpt": -9.983529090881348,
+  "${ROOT}/Falcon/epoch=741.ckpt": -9.982192039489746,
+  "${ROOT}/Falcon/epoch=742.ckpt": -9.982226371765137
+}

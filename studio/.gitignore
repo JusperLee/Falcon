@@ -1,0 +1,14 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+*.log
+# Weights come from Hugging Face; never commit local copies.
+*.ckpt
+*.pt
+*.pth
+recordings/
+outputs/

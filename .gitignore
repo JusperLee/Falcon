@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# System
+.DS_Store
+
+# Logs
+*.log
+wandb/
+runs/
+lightning_logs/
+
+# Data and outputs
+data/
+datasets/
+outputs/
+results/
+
+# Checkpoints and pretrained weights
+pretrain_zoo/
+*.ckpt
+*.pt
+*.pth
+*.pth.tar
+*.onnx
+
+# Compressed files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z

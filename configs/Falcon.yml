@@ -1,0 +1,171 @@
+# Video network config
+videonet:
+    videonet_name: FRCNNVideoModel
+    videonet_config:
+      backbone_type: resnet
+      relu_type: prelu
+      width_mult: 1.0
+      pretrain: pretrain_zoo/frcnn_128_512.backbone.pth.tar
+audionet:
+    audionet_name: FalconSpeakerContrastive
+    audionet_config:
+      n_src: 1
+      pretrained_vout_chan: 512
+      causal: true
+      spk_embed_dim: 64
+
+      video_bn_params:
+        kernel_size: -1
+
+      audio_bn_params:
+        pre_norm_type: cLNhw
+        pre_act_type: ReLU
+        out_chan: 112
+        kernel_size: 1
+        is2d: true
+
+      enc_dec_params:
+        win: 256
+        hop_length: 128
+        out_chan: 112
+        kernel_size: 3
+        stride: 1
+        bias: false
+        act_type:
+        norm_type:
+        causal: true
+
+      audio_params:
+        n_freqs: 129
+        hid_chan: 64
+        kernel_size: 5
+        stride: 2
+        norm_type: cLNhw
+        act_type: PReLU
+        upsampling_depth: 4
+        repeats: 2
+        shared: true
+        is2d: true
+        layers:
+          layer_1:
+            hid_chan: 24
+            dim: 4
+            kernel_size: 8
+            stride: 1
+            rnn_type: LSTM
+            num_layers: 1
+            bidirectional: true
+          layer_2:
+            hid_chan: 72
+            dim: 3
+            kernel_size: 8
+            stride: 1
+            rnn_type: LSTM
+            num_layers: 1
+            bidirectional: false
+          layer_3:
+            dim: 3
+            n_head: 4
+            hid_chan: 4
+            act_type: PReLU
+            norm_type: LayerNormalization4D
+            causal: true
+
+      video_params:
+        hid_chan: 32
+        kernel_size: 3
+        stride: 2
+        norm_type: BatchNorm1d
+        act_type: PReLU
+        repeats: 1
+        shared: true
+        is2d: false
+        layers:
+          layer_1:
+            kernel_size: 3
+            n_head: 8
+            dropout: 0.1
+            norm_type: cLN
+            causal: true
+
+      fusion_params:
+        fusion_type: NeuroSCNetFusion
+        fusion_shared: true
+        kernel_size: 4
+        is2d: true
+
+      mask_generation_params:
+        mask_generator_type: MaskGenerator
+        mask_act: ReLU
+        RI_split: true
+        is2d: true
+
+# Speaker contrastive config
+spk_contrast:
+  margin: 0.5
+  alpha_pos: 1.0
+  alpha_neg: 1.0
+  beta_init: 0.0
+  beta_final: 1.0
+  beta_anneal_epochs: 200
+  loss_weight: 1.0
+
+# Loss config
+loss:
+  train:
+    loss_func: PITLossWrapper
+    sdr_type: pairwise_neg_snr
+    config:
+      pit_from: pw_mtx
+      threshold_byloss: true
+  val:
+    loss_func: PITLossWrapper
+    sdr_type: pairwise_neg_sisdr
+    config:
+      pit_from: pw_mtx
+      threshold_byloss: false
+
+# Training config
+training:
+  system: AudioVisualLightningModuleNASSv2
+  gpus: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  parallel: ddp
+  epochs: 1000
+  early_stop:
+    monitor: val_loss/dataloader_idx_0
+    mode: min
+    patience: 30
+    verbose: true
+
+# Optim config
+optimizer:
+  optim_name: adamw
+  lr: 0.001
+  weight_decay: 0.01
+
+# Sche config
+scheduler:
+  sche_name: ReduceLROnPlateau
+  sche_config:
+    patience: 15
+    factor: 0.5
+
+# Data config
+datamodule:
+  data_name: AVSpeechDataModuleWithNear
+  data_config:
+    train_dir: --
+    valid_dir: --
+    test_dir: --
+    n_src: 1
+    sample_rate: 16000
+    segment: 2.0
+    normalize_audio: false
+    batch_size: 4
+    num_workers: 8
+    pin_memory: true
+    persistent_workers: true
+    use_near: true
+
+exp:
+  exp_name: Falcon
