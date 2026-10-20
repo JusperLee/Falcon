@@ -20,7 +20,7 @@
 **NeurIPS 2026**
 
 <!-- TODO: 论文和数据集公开后补充链接。 -->
-[**论文 (TODO)**](#) | [**🎙️ 在线体验**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**Demo 页面**](https://submission-falcon.github.io/demo/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-基准) | [**Falcon Studio**](studio/README_zh.md)
+[**论文 (TODO)**](#) | [**🎙️ 在线体验**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**项目主页**](https://cslikai.cn/Falcon/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-基准) | [**Falcon Studio**](studio/README_zh.md)
 
 <p>
   <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="访客数（README 浏览次数）" title="统计 README 徽章的加载次数，不是独立访客数"></a>
@@ -221,6 +221,7 @@ Falcon/
 ├── look2hear/                # 模型、视频模型、网络层、损失、数据集、Lightning 系统、指标
 ├── Experiments/checkpoint/   # 配置快照与最优 checkpoint 记录（权重需另行下载）
 ├── assets/                   # README 图片
+├── project_page/             # 项目主页与 demo 样例（https://cslikai.cn/Falcon/；音视频在 oss.cslikai.cn）
 └── studio/                   # Falcon Studio
     ├── server.py             # 本地 FastAPI + WebSocket 推理服务
     ├── falcon_runtime.py     # Hugging Face 权重下载、严格加载、2 秒窗口推理

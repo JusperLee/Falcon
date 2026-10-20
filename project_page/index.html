@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Falcon | Streaming Audio-Visual Target Speaker Extraction</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --primary-soft: #ccfbf1;
+      --accent: #f59e0b;
+      --ink: #111827;
+      --muted: #6b7280;
+      --light: #f8fafc;
+      --paper: #ffffff;
+      --line: #e5e7eb;
+      --shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+      --max-width: 1120px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Lora', Georgia, serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.72;
+      font-size: 17px;
+    }
+    h1, h2, h3, h4, nav, .btn, .tag, table, footer, .stat-card, .demo-label, .copy-btn {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    a { color: var(--primary); text-decoration: none; transition: 0.2s ease; }
+    a:hover { color: var(--primary-dark); text-decoration: underline; }
+
+    #progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 4px; z-index: 10000; background: transparent; }
+    #progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+
+    .navbar {
+      position: sticky; top: 0; z-index: 1000;
+      backdrop-filter: blur(18px);
+      background: rgba(255,255,255,0.84);
+      border-bottom: 1px solid rgba(229,231,235,0.75);
+    }
+    .nav-inner {
+      max-width: var(--max-width); margin: 0 auto; padding: 12px 22px;
+      display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    }
+    .brand { font-weight: 800; color: var(--ink); letter-spacing: -0.03em; }
+    .nav-links { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.88rem; }
+    .nav-links a { color: #374151; font-weight: 600; }
+
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 22px; }
+    .section { padding: 78px 0; border-bottom: 1px solid var(--line); }
+    .section-alt { background: linear-gradient(180deg, #fbfefe 0%, #f8fafc 100%); }
+    .section-title { text-align: center; margin-bottom: 18px; font-size: 2rem; letter-spacing: -0.04em; }
+    .section-subtitle { max-width: 840px; text-align: center; color: var(--muted); margin: 0 auto 36px; font-family: 'Inter', sans-serif; font-size: 1rem; }
+
+    .hero {
+      position: relative; overflow: hidden; text-align: center;
+      padding: 92px 0 56px;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(20,184,166,0.17), transparent 30%),
+        radial-gradient(circle at 85% 5%, rgba(245,158,11,0.14), transparent 26%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+    .hero::after {
+      content: ''; position: absolute; inset: auto -20% -55% -20%; height: 70%;
+      background: radial-gradient(circle, rgba(15,118,110,0.08), transparent 60%);
+      pointer-events: none;
+    }
+    .conference-badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; margin-bottom: 18px;
+      border: 1px solid rgba(15,118,110,0.18); border-radius: 999px; background: rgba(204,251,241,0.55);
+      color: var(--primary-dark); font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 700;
+    }
+    .title {
+      max-width: 1020px; margin: 0 auto 22px; font-size: clamp(2rem, 4.2vw, 4.05rem);
+      line-height: 1.08; letter-spacing: -0.07em; font-weight: 800; color: #0f172a;
+    }
+    .authors { font-family: 'Inter', sans-serif; color: #374151; margin-bottom: 8px; font-size: 1.05rem; }
+    .affiliation { font-family: 'Inter', sans-serif; color: var(--muted); font-size: 0.95rem; margin-bottom: 28px; }
+    .btn-group { display: flex; justify-content: center; gap: 13px; flex-wrap: wrap; margin: 28px 0 34px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 9px; border-radius: 999px; padding: 10px 21px;
+      background: #0f172a; color: #fff; font-weight: 700; font-size: 0.92rem;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.15); transition: 0.2s ease;
+    }
+    .btn.secondary { background: #ffffff; color: #111827; border: 1px solid var(--line); box-shadow: 0 8px 22px rgba(15,23,42,0.06); }
+    .btn:hover { transform: translateY(-2px); text-decoration: none; color: #fff; background: #1f2937; }
+    .btn.secondary:hover { color: #111827; background: #f9fafb; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+    .stat-card {
+      background: rgba(255,255,255,0.78); border: 1px solid rgba(229,231,235,0.9); border-radius: 18px;
+      padding: 20px 14px; box-shadow: 0 12px 30px rgba(15,23,42,0.06);
+    }
+    .stat-number { display: block; font-size: 1.85rem; font-weight: 800; letter-spacing: -0.05em; color: var(--primary-dark); }
+    .stat-label { display: block; color: var(--muted); font-size: 0.82rem; margin-top: 3px; line-height: 1.35; }
+
+    .abstract-box {
+      background: #ffffff; border: 1px solid var(--line); border-radius: 22px; padding: 38px;
+      box-shadow: var(--shadow); max-width: 980px; margin: 0 auto;
+    }
+    .abstract-text { text-align: justify; margin-bottom: 15px; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px;
+      background: var(--primary-soft); color: var(--primary-dark); font-size: 0.82rem; font-weight: 700;
+    }
+
+    .contrib-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .card {
+      background: #ffffff; border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 32px rgba(15,23,42,0.055);
+    }
+    .card h3 { font-size: 1.05rem; margin-bottom: 10px; letter-spacing: -0.02em; }
+    .card p { color: #4b5563; font-size: 0.98rem; }
+    .icon-circle {
+      width: 42px; height: 42px; border-radius: 50%; background: var(--primary-soft); color: var(--primary-dark);
+      display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;
+    }
+
+    figure { margin: 34px 0; text-align: center; }
+    .img-wrapper {
+      display: inline-block; width: 100%; background: #fff; border: 1px solid var(--line); border-radius: 18px;
+      padding: 10px; box-shadow: var(--shadow); cursor: zoom-in;
+    }
+    img { display: block; max-width: 100%; height: auto; border-radius: 12px; }
+    .figure-placeholder {
+      min-height: 300px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(15,118,110,0.08), rgba(245,158,11,0.08));
+      border: 1px dashed rgba(15,118,110,0.35); display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 10px; font-family: 'Inter', sans-serif; color: #0f766e;
+    }
+    .figure-placeholder code { background: rgba(255,255,255,0.75); padding: 5px 8px; border-radius: 8px; color: #334155; }
+    figcaption { margin-top: 12px; color: var(--muted); font-size: 0.92rem; font-style: italic; }
+
+    .method-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 34px; }
+    .flow-step {
+      position: relative; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px 16px; text-align: center;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.055); font-family: 'Inter', sans-serif;
+    }
+    .flow-step strong { display: block; font-size: 0.95rem; margin: 8px 0 6px; }
+    .flow-step span { color: var(--muted); font-size: 0.82rem; line-height: 1.45; display: block; }
+
+    .table-responsive { overflow-x: auto; margin: 24px 0 34px; border-radius: 14px; border: 1px solid var(--line); background: #fff; box-shadow: 0 8px 26px rgba(15,23,42,0.04); }
+    .academic-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; white-space: nowrap; }
+    .academic-table th, .academic-table td { padding: 11px 13px; text-align: center; border-bottom: 1px solid #eef2f7; }
+    .academic-table th { background: #f8fafc; font-weight: 700; color: #111827; }
+    .academic-table thead tr:first-child th { border-top: 2px solid #111827; }
+    .academic-table tbody tr:last-child td { border-bottom: 2px solid #111827; }
+    .academic-table td:first-child, .academic-table th:first-child { text-align: left; }
+    .row-highlight { background: #f0fdfa; font-weight: 800; }
+    .best { font-weight: 800; color: #0f766e; }
+    .second { text-decoration: underline; text-underline-offset: 3px; color: #374151; }
+    .pending { font-family: 'Roboto Mono', monospace; color: #9a3412; background: #fffbeb; padding: 2px 7px; border-radius: 999px; }
+
+    .tab-buttons { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 26px; }
+    .tab-btn {
+      border: 1px solid var(--line); background: #fff; color: #475569; padding: 9px 19px; border-radius: 999px;
+      font-family: 'Inter', sans-serif; font-weight: 700; cursor: pointer; transition: 0.18s ease;
+    }
+    .tab-btn:hover { background: #f1f5f9; }
+    .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 9px 20px rgba(15,118,110,0.20); }
+    .tab-content { display: none; animation: fadeIn 0.28s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: translateY(0);} }
+
+    /* Clean synchronized AV demo */
+    .av-demo-card { display: none; animation: fadeIn 0.28s ease; }
+    .av-demo-card.active { display: block; }
+    .av-demo-layout {
+      max-width: 900px; margin: 0 auto; background: #ffffff;
+      border: 1px solid var(--line); border-radius: 26px; padding: 22px; box-shadow: var(--shadow);
+    }
+    .demo-stage {
+      background: radial-gradient(circle at 15% 15%, rgba(15,118,110,0.12), transparent 32%), linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      border: 1px solid #eef2f7; border-radius: 22px; padding: 22px;
+    }
+    .video-panel {
+      position: relative; width: 100%; max-width: 760px; height: 420px;
+      margin: 0 auto; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; border-radius: 22px; background: #0f172a;
+      box-shadow: 0 18px 42px rgba(15,23,42,0.18);
+    }
+    .video-panel video { display: block; width: auto; height: 100%; max-width: 100%; object-fit: contain; border-radius: 18px; background: #0f172a; }
+    .scene-caption { max-width: 760px; margin: 16px auto 0; padding: 0 4px; font-family: 'Inter', sans-serif; }
+    .scene-caption span { display: block; color: #0f172a; font-size: 1.05rem; font-weight: 800; letter-spacing: -0.03em; }
+    .scene-caption small { display: block; margin-top: 2px; color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+    .audio-panel { max-width: 760px; margin: 20px auto 0; padding-top: 18px; border-top: 1px solid var(--line); }
+    .demo-label { margin-bottom: 10px; font-size: 0.76rem; font-weight: 800; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.1em; }
+    .method-list { display: flex; flex-wrap: wrap; gap: 10px; }
+    .method-btn {
+      border: 1px solid var(--line); background: #ffffff; color: #334155;
+      border-radius: 999px; padding: 10px 15px; cursor: pointer; text-align: left;
+      font-family: 'Inter', sans-serif; font-weight: 750; font-size: 0.88rem;
+      display: inline-flex; align-items: center; gap: 8px; transition: 0.18s ease;
+      box-shadow: 0 6px 16px rgba(15,23,42,0.04);
+    }
+    .method-btn:hover { transform: translateY(-1px); border-color: rgba(15,118,110,0.35); background: #f0fdfa; }
+    .method-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; box-shadow: 0 10px 24px rgba(15,23,42,0.16); }
+    .method-btn.ours.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-color: var(--primary); }
+    .method-dot { width: 9px; height: 9px; border-radius: 999px; background: #cbd5e1; flex: 0 0 auto; }
+    .method-btn.active .method-dot { background: var(--accent); box-shadow: 0 0 0 4px rgba(245,158,11,0.2); }
+    .playing-row { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; }
+    .now-playing { color: #475569; font-size: 0.92rem; }
+    .sync-hint {
+      display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px;
+      border-radius: 999px; background: #ecfeff; color: #155e75;
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.76rem;
+    }
+    .demo-comment { margin-top: 12px; color: var(--muted); font-family: 'Inter', sans-serif; font-size: 0.88rem; line-height: 1.55; }
+    .demo-audio { display: none; }
+
+    .comparison-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .note-box {
+      background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 16px 18px; border-radius: 16px;
+      font-family: 'Inter', sans-serif; font-size: 0.92rem; margin-top: 18px;
+    }
+
+    .bibtex-container { position: relative; background: #0f172a; color: #dbeafe; padding: 26px; border-radius: 16px; overflow-x: auto; box-shadow: var(--shadow); }
+    .bibtex-container pre { font-family: 'Roboto Mono', monospace; font-size: 0.82rem; line-height: 1.6; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; border: 0; padding: 6px 12px; border-radius: 8px; background: #334155; color: #fff; cursor: pointer; font-weight: 700; }
+    .copy-btn:hover { background: #475569; }
+
+    footer { padding: 42px 0; text-align: center; color: var(--muted); font-size: 0.9rem; }
+    .lightbox { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(255,255,255,0.97); align-items: center; justify-content: center; cursor: zoom-out; padding: 22px; }
+    .lightbox img { max-width: 96%; max-height: 94%; box-shadow: 0 25px 70px rgba(15,23,42,0.28); }
+
+    @media (max-width: 900px) {
+      .stats-grid, .contrib-grid, .method-flow, .demo-grid, .comparison-grid { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+      .av-demo-layout { max-width: 760px; }
+      .video-panel { height: 380px; }
+    }
+    @media (max-width: 640px) {
+      body { font-size: 16px; }
+      .section { padding: 56px 0; }
+      .stats-grid, .contrib-grid, .method-flow, .demo-grid, .comparison-grid { grid-template-columns: 1fr; }
+      .abstract-box { padding: 24px; }
+      .av-demo-layout { padding: 14px; border-radius: 20px; }
+      .demo-stage { padding: 14px; border-radius: 18px; }
+      .video-panel { height: 330px; border-radius: 18px; }
+      .method-btn { width: 100%; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div id="progress-container"><div id="progress-bar"></div></div>
+
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a class="brand" href="#home" style="display:inline-flex;flex-direction:row;align-items:center;gap:8px"><img src="logo.png" alt="" width="26" height="26" style="border-radius:6px">Falcon</a>
+      <div class="nav-links">
+        <a href="#abstract">Abstract</a>
+        <a href="#contributions">Contributions</a>
+        <a href="#realssa">RealSSA</a>
+        <a href="#method">Method</a>
+        <a href="#demos">Demos</a>
+        <a href="#results">Results</a>
+        <a href="#citation">Citation</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero" id="home">
+    <div class="container">
+      <div class="conference-badge"><i class="fa-solid fa-wave-square"></i> NeurIPS 2026 · Project Page</div>
+      <h1 class="title">Efficient Streaming Audio-Visual Target Speaker Extraction for Real-World Acoustic Scenes</h1>
+      <div class="authors">Wendi Sang<sup>*</sup>, Kai Li<sup>*</sup>, Yifan Li, Jianqiang Huang, Xiaolin Hu</div>
+      <div class="affiliation"><sup>*</sup>Equal contribution · Audio-Visual Target Speaker Extraction · Streaming Inference</div>
+      <div class="btn-group">
+        <a href="https://github.com/JusperLee/Falcon" class="btn" target="_blank" rel="noopener"><i class="fab fa-github"></i> Code</a>
+        <a href="https://huggingface.co/JusperLee/Falcon" class="btn secondary" target="_blank" rel="noopener">🤗 Models</a>
+        <a href="https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/" class="btn secondary" target="_blank" rel="noopener"><i class="fa-solid fa-microphone"></i> Live demo</a>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-number">7.7 dB</span><span class="stat-label">RealSSA SI-SNRi, Falcon</span></div>
+        <div class="stat-card"><span class="stat-number">16.4 dB</span><span class="stat-label">LRS3-2Mix SI-SNRi, Falcon</span></div>
+        <div class="stat-card"><span class="stat-number">0.5M</span><span class="stat-label">Parameters, Falcon</span></div>
+        <div class="stat-card"><span class="stat-number">51.3 ms</span><span class="stat-label">GPU latency, Falcon</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" id="abstract">
+    <div class="container">
+      <div class="abstract-box">
+        <h2 class="section-title" style="margin-bottom:20px;">Abstract</h2>
+        <p class="abstract-text">
+          Despite rapid progress in audio-visual target speaker extraction (AVTSE), deploying it as a streaming system remains hard for two reasons: high-performance causal models incur large parameter counts and long inference latency, whereas lightweight alternatives recover capacity by repeatedly applying the same separator and thereby reintroduce computation.
+        </p>
+        <p class="abstract-text">
+          We propose <strong>Falcon</strong>, an efficient causal AVTSE framework whose <strong>AudioBlock</strong> performs multi-scale time-frequency separation in a <strong>single forward pass</strong> and is trained with an <strong>encoder-space speaker contrastive loss</strong> that suppresses near-field leakage at no inference cost and is architecture-agnostic across AVTSE backbones.
+        </p>
+        <p class="abstract-text">
+          We also release <strong>RealSSA</strong>, a realistic simulated-scene AVTSE benchmark with 2 to 6 dynamic speakers across four scene types, paired with a real-recorded evaluation set. Falcon achieves state-of-the-art extraction on RealSSA, LRS2-2Mix, and LRS3-2Mix while reducing parameters, computational cost, and GPU inference latency over the AV-TFGridNet baseline by <strong>91.9%</strong>, <strong>20.2×</strong>, and <strong>11.1×</strong>, respectively.
+        </p>
+        <div class="pill-row">
+          <span class="tag"><i class="fa-solid fa-bolt"></i> Streaming AVTSE</span>
+          <span class="tag"><i class="fa-solid fa-layer-group"></i> Single-pass Multi-scale Separator</span>
+          <span class="tag"><i class="fa-solid fa-users-viewfinder"></i> RealSSA Benchmark</span>
+          <span class="tag"><i class="fa-solid fa-microphone-lines"></i> Real-world Acoustic Scenes</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="contributions">
+    <div class="container">
+      <h2 class="section-title">Key Contributions</h2>
+      <p class="section-subtitle">The page is designed to make the workload visible: a new streaming model, a new realistic benchmark, and comprehensive evaluation across simulated and recorded scenes.</p>
+      <div class="contrib-grid">
+        <div class="card">
+          <div class="icon-circle"><i class="fa-solid fa-forward-fast"></i></div>
+          <h3>Single-pass streaming separation</h3>
+          <p>Falcon replaces iterative separator cycles with an encoder-decoder AudioBlock that captures multi-scale time-frequency structure in one forward pass.</p>
+        </div>
+        <div class="card">
+          <div class="icon-circle"><i class="fa-solid fa-user-shield"></i></div>
+          <h3>Speaker contrastive training</h3>
+          <p>An encoder-space contrastive loss pulls estimates toward the clean target while pushing them away from near-field interferers, without adding inference cost.</p>
+        </div>
+        <div class="card">
+          <div class="icon-circle"><i class="fa-solid fa-database"></i></div>
+          <h3>RealSSA benchmark</h3>
+          <p>RealSSA covers dynamic speaker counts, near-/far-field interference, reverberation, environmental noise, sudden noise, and real-recorded evaluation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="realssa">
+    <div class="container">
+      <h2 class="section-title">RealSSA Dataset</h2>
+      <p class="section-subtitle">RealSSA is built around dynamic speaker counts, explicit distance control, and systematic acoustic variation across realistic scenes.</p>
+      <div class="comparison-grid">
+        <div class="card">
+          <h3><i class="fa-solid fa-map-location-dot"></i> Scene Coverage</h3>
+          <p>Four scene types simulate real deployment settings: small meeting rooms, medium indoor spaces, large public spaces, and outdoor environments.</p>
+        </div>
+        <div class="card">
+          <h3><i class="fa-solid fa-ear-listen"></i> Acoustic Factors</h3>
+          <p>RealSSA jointly varies near-field speakers, far-field speech, RT60, environmental noise SIR, and sudden noise events.</p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="academic-table">
+          <thead>
+            <tr>
+              <th>Scene</th><th>Space Size</th><th>RT60</th><th>Near Speakers</th><th>Far Speakers</th><th>Env. Noise SIR</th><th>Sudden Noise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Small meeting</td><td>4–6 × 3–5 × 2.5–3 m</td><td>0.3–0.6 s</td><td>1–5, 0.5–1.5 m</td><td>none</td><td>5–15 dB</td><td>30%, 1 event</td></tr>
+            <tr><td>Medium indoor</td><td>8–15 × 8–12 × 3–4 m</td><td>0.5–0.9 s</td><td>1–3, 1.0–2.5 m</td><td>10–15, 3–15 m</td><td>5–10 dB</td><td>40%, 1–2 events</td></tr>
+            <tr><td>Large public</td><td>20–40 × 15–30 × 4–8 m</td><td>1.0–2.0 s</td><td>1–4, 1.0–3.0 m</td><td>10–15, 5–20 m</td><td>2–8 dB</td><td>50%, 1–3 events</td></tr>
+            <tr class="row-highlight"><td>Outdoor</td><td>50 × 50 × 20 m</td><td>0.05–0.1 s</td><td>1–4, 1.0–4.0 m</td><td>10–15, 5–25 m</td><td>-2–5 dB</td><td>40%, 1–3 events</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="method">
+    <div class="container">
+      <h2 class="section-title">Methodology</h2>
+      <p class="section-subtitle">Falcon receives mixture audio and target-speaker mouth video, extracts audio-visual representations, and outputs the target speech stream under causal constraints.</p>
+
+      <h3 style="margin-top:36px; margin-bottom:12px; font-size:1.2rem;">Overall Pipeline</h3>
+      <p style="max-width:860px; margin-bottom:20px; color:#4b5563;">Falcon adopts a standard target-speaker extraction framework: audio and visual encoders extract modality-specific features, a fusion module combines them, and a single-pass separator with mask generator recovers the target speech. Unlike iterative separators that recycle one compact block across multiple cycles, Falcon accumulates multi-scale time-frequency capacity within a single forward pass.</p>
+
+      <figure>
+        <div class="img-wrapper">
+          <img src="figures/Overall_Pipeline.pdf.png" alt="Overall pipeline of Falcon" />
+        </div>
+        <figcaption><strong>Figure 1.</strong> Overall pipeline of Falcon for streaming audio-visual target speaker extraction.</figcaption>
+      </figure>
+
+      <div class="method-flow">
+        <div class="flow-step"><i class="fa-solid fa-volume-high"></i><strong>Mixture Audio</strong><span>Streaming waveform input under dynamic interference.</span></div>
+        <div class="flow-step"><i class="fa-solid fa-video"></i><strong>Mouth Video</strong><span>Visual target-speaker cue for permutation-free extraction.</span></div>
+        <div class="flow-step"><i class="fa-solid fa-layer-group"></i><strong>Falcon AudioBlock</strong><span>Single-pass multi-scale time-frequency modeling.</span></div>
+        <div class="flow-step"><i class="fa-solid fa-wand-magic-sparkles"></i><strong>Target Speech</strong><span>Low-latency extracted speech for downstream ASR.</span></div>
+      </div>
+
+      <h3 style="margin-top:48px; margin-bottom:12px; font-size:1.2rem;">Single-Pass Multi-Scale Separator</h3>
+      <p style="max-width:860px; margin-bottom:20px; color:#4b5563;">The separator follows an encoder-decoder design. The encoder progressively downsamples the fused feature across 3 stages to extract multi-scale representations and computes a global context at the bottleneck. This context is injected into skip features at each scale via gated modulation. The decoder restores resolution from coarse to fine, applying time-frequency modeling at every level.</p>
+
+      <figure>
+        <div class="img-wrapper">
+          <img src="figures/Separator.pdf.png" alt="Single-pass multi-scale separator" />
+        </div>
+        <figcaption><strong>Figure 2.</strong> Single-pass multi-scale separator with frequency-wise, temporal, and joint time-frequency refinement.</figcaption>
+      </figure>
+
+      <h3 style="margin-top:48px; margin-bottom:12px; font-size:1.2rem;">Time-Frequency Refinement Block (TFRB)</h3>
+      <p style="max-width:860px; margin-bottom:20px; color:#4b5563;">Each TFRB applies three stages of modeling in sequence: (1) a bidirectional LSTM along the frequency axis for spectral pattern capture, (2) a unidirectional LSTM along the time axis to maintain causal streaming, and (3) masked 2D self-attention over the joint time-frequency plane. This design enables fine-grained spectro-temporal refinement at each decoder level while preserving the causal constraint.</p>
+
+      <figure>
+        <div class="img-wrapper">
+          <img src="figures/TFRB.pdf.png" alt="Time-Frequency Refinement Block" />
+        </div>
+        <figcaption><strong>Figure 3.</strong> Time-Frequency Refinement Block (TFRB). Each block applies frequency-wise BiLSTM, causal temporal LSTM, and masked 2D self-attention in sequence.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="demos">
+    <div class="container">
+      <h2 class="section-title">Audio-Visual Demo Samples</h2>
+      <p class="section-subtitle">Select a scene and switch among different systems. The video timeline controls the selected separated audio, enabling synchronized audio-visual comparison.</p>
+
+      <div class="tab-buttons" id="demo-tabs">
+        <button class="tab-btn active" onclick="openDemo(event, 'demo-small')"><i class="fa-solid fa-door-closed"></i> Small Meeting Room</button>
+        <button class="tab-btn" onclick="openDemo(event, 'demo-medium')"><i class="fa-solid fa-building"></i> Medium Indoor</button>
+        <button class="tab-btn" onclick="openDemo(event, 'demo-large')"><i class="fa-solid fa-warehouse"></i> Large Public Space</button>
+        <button class="tab-btn" onclick="openDemo(event, 'demo-outdoor')"><i class="fa-solid fa-tree"></i> Outdoor</button>
+      </div>
+
+      <!-- Small Meeting Room -->
+      <div id="demo-small" class="av-demo-card active">
+        <div class="av-demo-layout">
+          <div class="demo-stage">
+            <div class="video-panel">
+              <video class="sync-video" controls playsinline preload="metadata" data-audio-id="audio-small">
+                <source src="https://oss.cslikai.cn/demos/small/s1.mp4" type="video/mp4">
+              </video>
+              <audio class="demo-audio" id="audio-small" preload="auto" src="https://oss.cslikai.cn/demos/small/base.wav"></audio>
+            </div>
+            <div class="scene-caption">
+              <span>Small Meeting Room</span>
+              <small>Close-range target speaker extraction with near-field interference.</small>
+            </div>
+            <div class="audio-panel">
+              <div class="demo-label">Choose a system</div>
+              <div class="method-list">
+                <button class="method-btn active" onclick="switchSyncedAudio(this, 'demo-small', 'https://oss.cslikai.cn/demos/small/base.wav', 'Base')"><span class="method-dot"></span> Base</button>
+                <button class="method-btn ours" onclick="switchSyncedAudio(this, 'demo-small', 'https://oss.cslikai.cn/demos/small/falcon.wav', 'Falcon (Ours)')"><span class="method-dot"></span> Falcon (Ours)</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-small', 'https://oss.cslikai.cn/demos/small/swiftnet.wav', 'Swift-Net-12')"><span class="method-dot"></span> Swift-Net-12</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-small', 'https://oss.cslikai.cn/demos/small/dolphin.wav', 'Dolphin')"><span class="method-dot"></span> Dolphin</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-small', 'https://oss.cslikai.cn/demos/small/TFGrid.wav', 'AV-TF-GridNet')"><span class="method-dot"></span> AV-TF-GridNet</button>
+              </div>
+              <div class="playing-row">
+                <div class="now-playing">Now Playing: <strong class="now-playing-label">Base</strong></div>
+                <div class="sync-hint"><i class="fa-solid fa-link"></i> Synchronized with video</div>
+              </div>
+              <p class="demo-comment">Play or seek the video. The selected separated audio will follow the same timestamp.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medium Indoor -->
+      <div id="demo-medium" class="av-demo-card">
+        <div class="av-demo-layout">
+          <div class="demo-stage">
+            <div class="video-panel">
+              <video class="sync-video" controls playsinline preload="metadata" data-audio-id="audio-medium">
+                <source src="https://oss.cslikai.cn/demos/medium/s1.mp4" type="video/mp4">
+              </video>
+              <audio class="demo-audio" id="audio-medium" preload="auto" src="https://oss.cslikai.cn/demos/medium/base.wav"></audio>
+            </div>
+            <div class="scene-caption">
+              <span>Medium Indoor</span>
+              <small>Indoor competing speakers and reverberation.</small>
+            </div>
+            <div class="audio-panel">
+              <div class="demo-label">Choose a system</div>
+              <div class="method-list">
+                <button class="method-btn active" onclick="switchSyncedAudio(this, 'demo-medium', 'https://oss.cslikai.cn/demos/medium/base.wav', 'Base')"><span class="method-dot"></span> Base</button>
+                <button class="method-btn ours" onclick="switchSyncedAudio(this, 'demo-medium', 'https://oss.cslikai.cn/demos/medium/falcon.wav', 'Falcon (Ours)')"><span class="method-dot"></span> Falcon (Ours)</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-medium', 'https://oss.cslikai.cn/demos/medium/swiftnet.wav', 'Swift-Net-12')"><span class="method-dot"></span> Swift-Net-12</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-medium', 'https://oss.cslikai.cn/demos/medium/dolphin.wav', 'Dolphin')"><span class="method-dot"></span> Dolphin</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-medium', 'https://oss.cslikai.cn/demos/medium/TFGrid.wav', 'AV-TF-GridNet')"><span class="method-dot"></span> AV-TF-GridNet</button>
+              </div>
+              <div class="playing-row">
+                <div class="now-playing">Now Playing: <strong class="now-playing-label">Base</strong></div>
+                <div class="sync-hint"><i class="fa-solid fa-link"></i> Synchronized with video</div>
+              </div>
+              <p class="demo-comment">The visible video is fixed, while the synchronized separated audio can be switched among systems.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Large Public Space -->
+      <div id="demo-large" class="av-demo-card">
+        <div class="av-demo-layout">
+          <div class="demo-stage">
+            <div class="video-panel">
+              <video class="sync-video" controls playsinline preload="metadata" data-audio-id="audio-large">
+                <source src="https://oss.cslikai.cn/demos/large/s1.mp4" type="video/mp4">
+              </video>
+              <audio class="demo-audio" id="audio-large" preload="auto" src="https://oss.cslikai.cn/demos/large/base.wav"></audio>
+            </div>
+            <div class="scene-caption">
+              <span>Large Public Space</span>
+              <small>High reverberation and dynamic interference.</small>
+            </div>
+            <div class="audio-panel">
+              <div class="demo-label">Choose a system</div>
+              <div class="method-list">
+                <button class="method-btn active" onclick="switchSyncedAudio(this, 'demo-large', 'https://oss.cslikai.cn/demos/large/base.wav', 'Base')"><span class="method-dot"></span> Base</button>
+                <button class="method-btn ours" onclick="switchSyncedAudio(this, 'demo-large', 'https://oss.cslikai.cn/demos/large/falcon.wav', 'Falcon (Ours)')"><span class="method-dot"></span> Falcon (Ours)</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-large', 'https://oss.cslikai.cn/demos/large/swiftnet.wav', 'Swift-Net-12')"><span class="method-dot"></span> Swift-Net-12</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-large', 'https://oss.cslikai.cn/demos/large/Dolphin.wav', 'Dolphin')"><span class="method-dot"></span> Dolphin</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-large', 'https://oss.cslikai.cn/demos/large/TFGrid.wav', 'AV-TF-GridNet')"><span class="method-dot"></span> AV-TF-GridNet</button>
+              </div>
+              <div class="playing-row">
+                <div class="now-playing">Now Playing: <strong class="now-playing-label">Base</strong></div>
+                <div class="sync-hint"><i class="fa-solid fa-link"></i> Synchronized with video</div>
+              </div>
+              <p class="demo-comment">This sample highlights robustness under high reverberation and sudden interference events.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outdoor -->
+      <div id="demo-outdoor" class="av-demo-card">
+        <div class="av-demo-layout">
+          <div class="demo-stage">
+            <div class="video-panel">
+              <video class="sync-video" controls playsinline preload="metadata" data-audio-id="audio-outdoor">
+                <source src="https://oss.cslikai.cn/demos/outdoor/s1.mp4" type="video/mp4">
+              </video>
+              <audio class="demo-audio" id="audio-outdoor" preload="auto" src="https://oss.cslikai.cn/demos/outdoor/base.wav"></audio>
+            </div>
+            <div class="scene-caption">
+              <span>Outdoor</span>
+              <small>Outdoor background noise and moving interference.</small>
+            </div>
+            <div class="audio-panel">
+              <div class="demo-label">Choose a system</div>
+              <div class="method-list">
+                <button class="method-btn active" onclick="switchSyncedAudio(this, 'demo-outdoor', 'https://oss.cslikai.cn/demos/outdoor/base.wav', 'Base')"><span class="method-dot"></span> Base</button>
+                <button class="method-btn ours" onclick="switchSyncedAudio(this, 'demo-outdoor', 'https://oss.cslikai.cn/demos/outdoor/falcon.wav', 'Falcon (Ours)')"><span class="method-dot"></span> Falcon (Ours)</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-outdoor', 'https://oss.cslikai.cn/demos/outdoor/swiftnet.wav', 'Swift-Net-12')"><span class="method-dot"></span> Swift-Net-12</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-outdoor', 'https://oss.cslikai.cn/demos/outdoor/dolphin.wav', 'Dolphin')"><span class="method-dot"></span> Dolphin</button>
+                <button class="method-btn" onclick="switchSyncedAudio(this, 'demo-outdoor', 'https://oss.cslikai.cn/demos/outdoor/TFGrid.wav', 'AV-TF-GridNet')"><span class="method-dot"></span> AV-TF-GridNet</button>
+              </div>
+              <div class="playing-row">
+                <div class="now-playing">Now Playing: <strong class="now-playing-label">Base</strong></div>
+                <div class="sync-hint"><i class="fa-solid fa-link"></i> Synchronized with video</div>
+              </div>
+              <p class="demo-comment">This sample demonstrates streaming AVTSE under outdoor noise with moving interference.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note-box"><strong>Note.</strong> The original video audio is muted. The sound you hear comes from the selected separated audio track and is synchronized with the video timeline.</div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="results">
+    <div class="container">
+      <h2 class="section-title">Experimental Results</h2>
+      <p class="section-subtitle">Main separation quality and efficiency comparisons. Bold indicates the best result; underlined values indicate the second-best result.</p>
+
+      <div class="tab-buttons" id="result-tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'quality')">Separation Quality</button>
+        <button class="tab-btn" onclick="openTab(event, 'efficiency')">Efficiency</button>
+        <button class="tab-btn" onclick="openTab(event, 'dataset-ablation')">Real-world Evaluation</button>
+      </div>
+
+      <div id="quality" class="tab-content active result-content">
+        <div class="table-responsive">
+          <table class="academic-table">
+            <thead>
+              <tr><th rowspan="2">Method</th><th>RealSSA-Real</th><th colspan="2">RealSSA-Sim</th><th colspan="2">LRS2-2Mix</th><th colspan="2">LRS3-2Mix</th><th colspan="2">VoxCeleb2-2Mix</th></tr>
+              <tr><th>DNSMOS ↑</th><th>SI-SNRi ↑</th><th>SDRi ↑</th><th>SI-SNRi ↑</th><th>SDRi ↑</th><th>SI-SNRi ↑</th><th>SDRi ↑</th><th>SI-SNRi ↑</th><th>SDRi ↑</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>AV-ConvTasNet</td><td>2.580</td><td>1.2</td><td>2.6</td><td>9.8</td><td>10.3</td><td>12.5</td><td>12.8</td><td>6.9</td><td>8.2</td></tr>
+              <tr><td>AV-Sepformer</td><td>2.813</td><td>5.5</td><td>6.3</td><td>10.6</td><td>11.1</td><td>13.4</td><td>13.7</td><td>6.9</td><td>8.3</td></tr>
+              <tr><td>AV-TF-GridNet</td><td>3.030</td><td><span class="second">7.6</span></td><td><span class="second">8.1</span></td><td>12.7</td><td>13.1</td><td>14.3</td><td>14.8</td><td>5.8</td><td>7.7</td></tr>
+              <tr><td>RTFSNet-12</td><td><span class="second">3.066</span></td><td>4.9</td><td>5.7</td><td>12.4</td><td>12.8</td><td>14.0</td><td>14.4</td><td>8.4</td><td>10.7</td></tr>
+              <tr><td>CTCNet</td><td>2.840</td><td>5.4</td><td>6.2</td><td>8.0</td><td>8.8</td><td>9.4</td><td>10.2</td><td>2.5</td><td>4.7</td></tr>
+              <tr><td>AV-DPRNN</td><td>2.901</td><td>5.4</td><td>6.2</td><td>10.2</td><td>10.7</td><td>11.9</td><td>12.3</td><td>7.8</td><td>9.0</td></tr>
+              <tr><td>AV-Mossformer2</td><td>2.912</td><td>6.0</td><td>6.7</td><td>13.2</td><td>13.9</td><td><span class="second">16.2</span></td><td><span class="second">16.6</span></td><td>7.7</td><td>9.1</td></tr>
+              <tr><td>Swift-Net-12</td><td><span class="best">3.276</span></td><td>7.3</td><td>7.8</td><td>13.9</td><td>14.1</td><td>16.0</td><td>16.3</td><td><span class="second">9.4</span></td><td>10.8</td></tr>
+              <tr><td>Dolphin</td><td>2.960</td><td>6.7</td><td>7.3</td><td><span class="second">14.0</span></td><td><span class="second">14.6</span></td><td>14.3</td><td>14.9</td><td>9.2</td><td><span class="second">11.1</span></td></tr>
+              <tr class="row-highlight"><td>Falcon (Ours)</td><td><span class="best">3.276</span></td><td><span class="best">7.7</span></td><td><span class="best">8.2</span></td><td><span class="best">14.1</span></td><td><span class="best">14.7</span></td><td><span class="best">16.4</span></td><td><span class="best">16.7</span></td><td><span class="best">10.5</span></td><td><span class="best">11.8</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="efficiency" class="tab-content result-content">
+        <div class="table-responsive">
+          <table class="academic-table">
+            <thead>
+              <tr><th>Method</th><th>Params (M) ↓</th><th>MACs (G) ↓</th><th>CPU Latency (ms) ↓</th><th>GPU Latency (ms) ↓</th><th>RAM (MB) ↓</th><th>GPU Inf. (MB) ↓</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>AV-TF-GridNet</td><td>6.2</td><td>213.8</td><td>5646.3</td><td>567.8</td><td><span class="second">136.3</span></td><td>1015.8</td></tr>
+              <tr><td>AV-Mossformer2</td><td>56.7</td><td>224.2</td><td>16670.7</td><td>114.9</td><td>330.9</td><td>539.8</td></tr>
+              <tr><td>Swift-Net-12</td><td><span class="best">0.5</span></td><td>45.3</td><td>4163.8</td><td>172.1</td><td>482.3</td><td>411.7</td></tr>
+              <tr><td>Dolphin</td><td><span class="second">5.6</span></td><td><span class="second">18.1</span></td><td><span class="second">2411.0</span></td><td><span class="second">87.9</span></td><td>560.2</td><td><span class="second">390.3</span></td></tr>
+              <tr class="row-highlight"><td>Falcon (Ours)</td><td><span class="best">0.5</span></td><td><span class="best">10.6</span></td><td><span class="best">1361.2</span></td><td><span class="best">51.3</span></td><td><span class="best">125.3</span></td><td><span class="best">364.7</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note-box" style="max-width:860px;margin-left:auto;margin-right:auto;">Efficiency comparison among Falcon and the four best-performing causal AVTSE baselines from the main results table. Lower is better for all metrics.</div>
+      </div>
+
+      <div id="dataset-ablation" class="tab-content result-content">
+        <div class="table-responsive" style="max-width:860px; margin-left:auto; margin-right:auto;">
+          <table class="academic-table">
+            <thead>
+              <tr><th rowspan="2">Method</th><th colspan="2">Trained on VoxCeleb2</th><th colspan="2">Trained on RealSSA (Ours)</th></tr>
+              <tr><th>NISQA ↑</th><th>DNSMOS ↑</th><th>NISQA ↑</th><th>DNSMOS ↑</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>AV-TF-GridNet</td><td><span class="best">2.495</span></td><td>2.757</td><td>2.413</td><td><span class="best">3.030</span></td></tr>
+              <tr><td>AV-Mossformer2</td><td>1.995</td><td>2.715</td><td><span class="best">2.256</span></td><td><span class="best">2.912</span></td></tr>
+              <tr><td>Swift-Net-12</td><td>2.481</td><td>3.064</td><td><span class="best">3.484</span></td><td><span class="best">3.276</span></td></tr>
+              <tr><td>Dolphin</td><td>1.593</td><td>2.608</td><td><span class="best">2.590</span></td><td><span class="best">2.960</span></td></tr>
+              <tr class="row-highlight"><td>Falcon (Ours)</td><td>2.431</td><td>2.878</td><td><span class="best">3.615</span></td><td><span class="best">3.276</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note-box" style="max-width:860px;margin-left:auto;margin-right:auto;">Evaluation on RealSSA-Real when models were trained on VoxCeleb2 versus RealSSA. Training on RealSSA improved perceptual quality (NISQA and DNSMOS) across all tested architectures.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="ablation">
+    <div class="container">
+      <h2 class="section-title">Ablation Studies</h2>
+      <p class="section-subtitle">Ablations verify the role of downsampling depth, recurrent unit design, encoder-space speaker contrastive loss, and negative-weighting schedule.</p>
+      <div class="tab-buttons" id="ablation-tabs">
+        <button class="tab-btn active" onclick="openAblation(event, 'downsample')">Downsampling</button>
+        <button class="tab-btn" onclick="openAblation(event, 'rnn')">Recurrent Unit</button>
+        <button class="tab-btn" onclick="openAblation(event, 'contrastive')">Contrastive Loss</button>
+        <button class="tab-btn" onclick="openAblation(event, 'tau')">τ Schedule</button>
+      </div>
+
+      <div id="downsample" class="tab-content active ablation-content">
+        <div class="table-responsive" style="max-width:620px;margin-left:auto;margin-right:auto;"><table class="academic-table"><thead><tr><th>Downsampling Stages</th><th>SI-SNRi ↑</th><th>SDRi ↑</th></tr></thead><tbody><tr><td>1</td><td>7.1</td><td>7.7</td></tr><tr><td>2</td><td>7.4</td><td>7.9</td></tr><tr class="row-highlight"><td>3 (Ours)</td><td><span class="best">7.7</span></td><td><span class="best">8.2</span></td></tr></tbody></table></div>
+      </div>
+      <div id="rnn" class="tab-content ablation-content">
+        <div class="table-responsive" style="max-width:760px;margin-left:auto;margin-right:auto;"><table class="academic-table"><thead><tr><th>Recurrent Unit</th><th>SI-SNRi ↑</th><th>SDRi ↑</th><th>Params (M) ↓</th><th>MACs (G) ↓</th></tr></thead><tbody><tr><td>RNN</td><td>6.2</td><td>7.1</td><td>0.08</td><td>1.90</td></tr><tr><td>SRU</td><td>7.4</td><td>7.9</td><td>0.15</td><td>2.71</td></tr><tr><td>GRU</td><td>7.3</td><td>7.9</td><td>0.20</td><td>4.42</td></tr><tr class="row-highlight"><td>LSTM (Ours)</td><td><span class="best">7.7</span></td><td><span class="best">8.2</span></td><td>0.25</td><td>5.69</td></tr></tbody></table></div>
+      </div>
+      <div id="contrastive" class="tab-content ablation-content">
+        <div class="table-responsive" style="max-width:760px;margin-left:auto;margin-right:auto;"><table class="academic-table"><thead><tr><th>Model</th><th>Loss</th><th>SI-SNRi ↑</th><th>SDRi ↑</th></tr></thead><tbody><tr><td>Falcon</td><td>Without</td><td>7.3</td><td>7.8</td></tr><tr class="row-highlight"><td>Falcon</td><td>+ Ours</td><td>7.7</td><td>8.2</td></tr><tr><td>SwiftNet-12</td><td>Baseline</td><td>7.3</td><td>7.8</td></tr><tr class="row-highlight"><td>SwiftNet-12</td><td>+ Ours</td><td>7.5</td><td>8.0</td></tr><tr><td>Dolphin</td><td>Baseline</td><td>6.7</td><td>7.3</td></tr><tr class="row-highlight"><td>Dolphin</td><td>+ Ours</td><td>7.0</td><td>7.6</td></tr></tbody></table></div>
+      </div>
+      <div id="tau" class="tab-content ablation-content">
+        <div class="table-responsive" style="max-width:660px;margin-left:auto;margin-right:auto;"><table class="academic-table"><thead><tr><th>τ Strategy</th><th>SI-SNRi ↑</th><th>SDRi ↑</th></tr></thead><tbody><tr><td>Fixed τ = 0</td><td>7.5</td><td>8.1</td></tr><tr><td>Fixed τ = 1</td><td>7.4</td><td>7.9</td></tr><tr><td>Annealing τ: 0 → 2</td><td>7.5</td><td>8.0</td></tr><tr class="row-highlight"><td>Annealing τ: 0 → 1 (Ours)</td><td><span class="best">7.7</span></td><td><span class="best">8.2</span></td></tr></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="citation">
+    <div class="container">
+      <h2 class="section-title">Citation</h2>
+      <div class="bibtex-container">
+        <button class="copy-btn" onclick="copyBibtex()">Copy</button>
+<pre id="bibtex-text">@inproceedings{sang2026falcon,
+  title     = {Efficient Streaming Audio-Visual Target Speaker Extraction for Real-World Acoustic Scenes},
+  author    = {Sang, Wendi and Li, Kai and Li, Yifan and Huang, Jianqiang and Hu, Xiaolin},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026}
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>Falcon Project Page · Streaming Audio-Visual Target Speaker Extraction for Real-World Acoustic Scenes</p>
+    </div>
+  </footer>
+
+  <div id="lightbox" class="lightbox"><img id="lightbox-img" alt="Zoomed figure" /></div>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      document.getElementById('progress-bar').style.width = (winScroll / height) * 100 + '%';
+    });
+
+    function copyBibtex() {
+      const text = document.getElementById('bibtex-text').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = 'Copy', 1800);
+      });
+    }
+
+    function switchTab(evt, id, contentClass, buttonsContainerId) {
+      document.querySelectorAll('.' + contentClass).forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('#' + buttonsContainerId + ' .tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+    function openTab(evt, id) { switchTab(evt, id, 'result-content', 'result-tabs'); }
+    function openAblation(evt, id) { switchTab(evt, id, 'ablation-content', 'ablation-tabs'); }
+    function openDemo(evt, id) {
+      document.querySelectorAll('.av-demo-card').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('#demo-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      evt.currentTarget.classList.add('active');
+      pauseAllSyncedMedia();
+    }
+
+    function pauseAllSyncedMedia() {
+      document.querySelectorAll('.sync-video').forEach(video => { video.pause(); });
+      document.querySelectorAll('.demo-audio').forEach(audio => { audio.pause(); });
+    }
+
+    function getSyncedParts(cardId) {
+      const card = document.getElementById(cardId);
+      const video = card.querySelector('.sync-video');
+      const audio = document.getElementById(video.dataset.audioId);
+      const label = card.querySelector('.now-playing-label');
+      return { card, video, audio, label };
+    }
+
+    function hardSync(video, audio) {
+      if (!video || !audio) return;
+      const diff = Math.abs(audio.currentTime - video.currentTime);
+      if (diff > 0.15) audio.currentTime = video.currentTime;
+      audio.playbackRate = video.playbackRate;
+    }
+
+    function switchSyncedAudio(button, cardId, audioSrc, labelText) {
+      const { card, video, audio, label } = getSyncedParts(cardId);
+      card.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      const currentTime = video.currentTime || 0;
+      const shouldPlay = !video.paused && !video.ended;
+      audio.pause();
+      audio.src = audioSrc;
+      audio.load();
+      audio.addEventListener('loadedmetadata', function onLoaded() {
+        audio.removeEventListener('loadedmetadata', onLoaded);
+        const safeTime = Math.min(currentTime, audio.duration || currentTime);
+        audio.currentTime = safeTime;
+        video.currentTime = safeTime;
+        if (shouldPlay) audio.play().catch(() => {});
+      });
+      if (label) label.textContent = labelText;
+    }
+
+    function setupSyncedPlayers() {
+      document.querySelectorAll('.sync-video').forEach(video => {
+        const audio = document.getElementById(video.dataset.audioId);
+        if (!audio) return;
+        video.muted = true;
+        video.volume = 0;
+        video.addEventListener('play', () => {
+          hardSync(video, audio);
+          audio.play().catch(() => { video.pause(); });
+        });
+        video.addEventListener('pause', () => { audio.pause(); });
+        video.addEventListener('seeking', () => { audio.pause(); audio.currentTime = video.currentTime; });
+        video.addEventListener('seeked', () => {
+          audio.currentTime = video.currentTime;
+          if (!video.paused && !video.ended) audio.play().catch(() => {});
+        });
+        video.addEventListener('ratechange', () => { audio.playbackRate = video.playbackRate; });
+        video.addEventListener('ended', () => { audio.pause(); audio.currentTime = 0; });
+        video.addEventListener('timeupdate', () => { hardSync(video, audio); });
+        audio.addEventListener('ended', () => { video.pause(); });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', setupSyncedPlayers);
+
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    document.querySelectorAll('.img-wrapper img').forEach(img => {
+      img.addEventListener('click', () => {
+        if (!img.src) return;
+        lightboxImg.src = img.src;
+        lightbox.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      });
+    });
+    lightbox.addEventListener('click', () => {
+      lightbox.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    });
+  </script>
+</body>
+</html>

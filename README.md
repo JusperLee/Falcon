@@ -18,7 +18,7 @@
 **NeurIPS 2026**
 
 <!-- TODO: fill in the links once the paper, weights and dataset are public. -->
-[**Paper (TODO)**](#) | [**🎙️ Live demo**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**Demo page**](https://submission-falcon.github.io/demo/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-benchmark) | [**Falcon Studio**](studio/README.md)
+[**Paper (TODO)**](#) | [**🎙️ Live demo**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**Project page**](https://cslikai.cn/Falcon/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-benchmark) | [**Falcon Studio**](studio/README.md)
 
 <p>
   <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="Visitors (README views)" title="Counts README badge views, not unique visitors"></a>
@@ -219,6 +219,7 @@ Falcon/
 ├── look2hear/                # models, video models, layers, losses, datasets, Lightning systems, metrics
 ├── Experiments/checkpoint/   # config snapshot and best-checkpoint metadata (weights downloaded separately)
 ├── assets/                   # README figures
+├── project_page/             # project page with demo samples (https://cslikai.cn/Falcon/; media on oss.cslikai.cn)
 └── studio/                   # Falcon Studio
     ├── server.py             # local FastAPI + WebSocket inference server
     ├── falcon_runtime.py     # Hugging Face weight download, strict loading, 2 s windowed inference
