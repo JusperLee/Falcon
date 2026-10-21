@@ -3,31 +3,41 @@
 <a href="https://github.com/JusperLee/Falcon">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/logo-tile.png">
-    <img src="assets/logo.png" alt="Falcon logo: a falcon head with sound waves" width="160">
+    <img src="assets/logo.png" alt="Falcon logo: a falcon head with sound waves" width="112">
   </picture>
 </a>
 
-<h1>Falcon<br>Efficient Streaming Audio-Visual Target Speaker Extraction<br>for Real-World Acoustic Scenes</h1>
+<h1>Falcon</h1>
+<p><strong>Efficient Streaming Audio-Visual Target Speaker Extraction<br>for Real-World Acoustic Scenes</strong></p>
 
-**English** | [中文](README_zh.md)
+**NeurIPS 2026** · **English** | [中文](README_zh.md)
 
-**Wendi Sang**<sup>\*</sup>, **Kai Li**<sup>\*</sup>, **Yifan Li**, **Jianqiang Huang**, **Xiaolin Hu**
-
-<sup>\*</sup>Equal contribution <!-- TODO: affiliations and corresponding author -->
-
-**NeurIPS 2026**
-
-<!-- TODO: fill in the links once the paper, weights and dataset are public. -->
-[**Paper (TODO)**](#) | [**🎙️ Live demo**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**🤗 Space**](https://huggingface.co/spaces/JusperLee/Falcon-Studio) | [**Project page**](https://cslikai.cn/Falcon/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-benchmark) | [**Falcon Studio**](studio/README.md)
+Wendi Sang<sup>\*</sup>, Kai Li<sup>\*</sup>, Yifan Li, Jianqiang Huang, Xiaolin Hu  
+<sub><sup>\*</sup>Equal contribution</sub>
 
 <p>
-  <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="Visitors (README views)" title="Counts README badge views, not unique visitors"></a>
-  <img src="https://img.shields.io/badge/NeurIPS-2026-8c1b13?style=flat-square" alt="NeurIPS 2026">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="License: Apache 2.0"></a>
+  <a href="https://cslikai.cn/Falcon/">Project page</a> ·
+  <a href="https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/">Live demo</a> ·
+  <a href="https://huggingface.co/spaces/JusperLee/Falcon-Studio">Hugging Face Space</a> ·
+  <a href="studio/README.md">Falcon Studio</a>
+</p>
+<p>
+  <strong>Models</strong> &nbsp;
+  <a href="https://huggingface.co/JusperLee/Falcon">Falcon</a> ·
+  <a href="https://huggingface.co/JusperLee/Falcon-Big">Falcon-Big</a>
+  <br>
+  <strong>Datasets</strong> &nbsp;
+  <a href="https://huggingface.co/datasets/JusperLee/RealSSA-Sim">RealSSA-Sim</a> ·
+  <a href="https://huggingface.co/datasets/JusperLee/RealSSA-Real">RealSSA-Real</a>
+</p>
+<p>
+  <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="Visitors (README views)"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code-Apache%202.0-blue?style=flat-square" alt="Code license: Apache 2.0"></a>
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.10 or newer">
   <img src="https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=flat-square&amp;logo=pytorch&amp;logoColor=white" alt="PyTorch 2.x">
-  <a href="studio/README.md"><img src="https://img.shields.io/badge/Falcon%20Studio-macOS%20%7C%20Linux%20CUDA%20%7C%20Chrome-lightgrey?style=flat-square" alt="Falcon Studio: macOS, Linux with CUDA, Chrome"></a>
 </p>
+
+<sub>Paper link will be added when available.</sub>
 
 </div>
 
@@ -43,7 +53,7 @@
 
 Streaming AVTSE is needed in latency-sensitive applications such as calls, meetings and hearing assistance. Current causal systems face two coupled gaps. Standard benchmarks fix the number of speakers at two and ignore near-/far-field interference, reverberation and sudden noise. Strong causal architectures are also too heavy for edge devices, and lightweight alternatives regain capacity by invoking a small separator many times, which offsets the savings.
 
-- **RealSSA** is a realistic simulated-scene AVTSE benchmark with 2–6 dynamic near-/far-field speakers in four scene types, plus a real-recorded evaluation split.
+- **RealSSA** is a realistic simulated-scene AVTSE benchmark with near-/far-field interfering speech in four scene types, plus a real-recorded evaluation split.
 - **Falcon** is a causal AVTSE framework. Its AudioBlock performs multi-scale time-frequency separation in a single encoder–decoder pass.
 - An **encoder-space speaker contrastive loss** suppresses near-field leakage at zero inference cost and transfers across backbones.
 - Compared with the causal AV-TFGridNet baseline, Falcon cuts parameters by 91.9 %, computation by 20.2× and GPU latency by 11.1×.
@@ -65,14 +75,23 @@ Streaming AVTSE is needed in latency-sensitive applications such as calls, meeti
 
 ## 🌆 RealSSA benchmark
 
-Each RealSSA mixture has 2–6 dynamic speakers: a near-field target plus near- and far-field interferers, together with environmental noise and sudden events. The four scene types are small meetings, medium indoor spaces, large public spaces and outdoor streets, with room geometry, RT60, speaker distance and SIR sampled per scene. Room impulse responses are simulated with gpuRIR. Targets are normalized to −23 LUFS, mixtures are peak-limited to −1 dBFS, and all audio is mono 16 kHz. A real-world evaluation split was recorded in eight environments; faces in it are pixelated.
+The released RealSSA benchmark has two complementary datasets:
+
+| Dataset | Contents | Splits | Access |
+|---|---|---|---|
+| [**RealSSA-Sim**](https://huggingface.co/datasets/JusperLee/RealSSA-Sim) | Simulated scenes; 4-channel 16 kHz mixtures and target speech, RGB mouth crops and scene metadata | 100,826 train / 9,133 validation / 9,169 test examples | Gated, manual approval; CC BY-NC-ND 4.0 and source-specific terms |
+| [**RealSSA-Real**](https://huggingface.co/datasets/JusperLee/RealSSA-Real) | Real recordings; 54 paired AV segments from 40 recordings, 10 speakers, 8 scenes; 83.99 min | Test only; a separate original-recordings view contains 34 recordings | Gated, manual approval; research-use conditions in the dataset card |
+
+RealSSA-Sim covers `small_meeting`, `medium_indoor`, `large_public` and `outdoor` with static sound sources, near-/far-field interfering speech, environmental noise and sudden events. It is distributed as 240 WebDataset TAR shards. RealSSA-Real supplies stereo 16 kHz inputs, 25 fps target-face videos, mouth crops, landmarks, speaker enrollment audio and recording-level transcripts. Enrollment audio is an independent speaker reference, not a time-aligned clean target for SI-SDR.
+
+**Start with the dataset cards** for download, file schemas, channel selection, alignment and usage examples. The published multichannel shards need adaptation before use with the repository's mono, folder-based training loader. Sim metadata contains generation-time source paths; these are not downloadable near-speaker waveforms. The original negative-speaker contrastive training setup requires those source signals. Code/weight licensing does not override dataset access or usage terms.
 
 <p align="center">
   <img src="assets/realssa_scenes.jpg" alt="Real-world AVTSE scenarios motivating RealSSA: small rooms, coffee shops, shopping malls and outdoor streets." width="100%">
   <br><em>Real-world scenarios motivating RealSSA. From left: small rooms, coffee shops, shopping malls, outdoor streets.</em>
 </p>
 
-<!-- TODO: add the RealSSA download link and license once it is public. -->
+
 
 ## ⚡ Installation
 
