@@ -3,33 +3,41 @@
 <a href="https://github.com/JusperLee/Falcon">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/logo-tile.png">
-    <img src="assets/logo.png" alt="Falcon 标志：带声波的猎鹰头像" width="160">
+    <img src="assets/logo.png" alt="Falcon logo: a falcon head with sound waves" width="112">
   </picture>
 </a>
 
-<h1>Falcon<br>Efficient Streaming Audio-Visual Target Speaker Extraction<br>for Real-World Acoustic Scenes</h1>
+<h1>Falcon</h1>
+<p><strong>Efficient Streaming Audio-Visual Target Speaker Extraction<br>for Real-World Acoustic Scenes</strong></p>
 
-**面向真实声学场景的高效流式音视频目标说话人提取**
+**NeurIPS 2026** · [English](README.md) | **中文**
 
-[English](README.md) | **中文**
-
-**Wendi Sang**<sup>\*</sup>, **Kai Li**<sup>\*</sup>, **Yifan Li**, **Jianqiang Huang**, **Xiaolin Hu**
-
-<sup>\*</sup>共同第一作者 <!-- TODO: 作者单位与通讯作者 -->
-
-**NeurIPS 2026**
-
-<!-- TODO: 论文和数据集公开后补充链接。 -->
-[**论文 (TODO)**](#) | [**🎙️ 在线体验**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**🤗 Space**](https://huggingface.co/spaces/JusperLee/Falcon-Studio) | [**项目主页**](https://cslikai.cn/Falcon/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-基准) | [**Falcon Studio**](studio/README_zh.md)
+Wendi Sang<sup>\*</sup>, Kai Li<sup>\*</sup>, Yifan Li, Jianqiang Huang, Xiaolin Hu  
+<sub><sup>\*</sup>共同第一作者</sub>
 
 <p>
-  <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="访客数（README 浏览次数）" title="统计 README 徽章的加载次数，不是独立访客数"></a>
-  <img src="https://img.shields.io/badge/NeurIPS-2026-8c1b13?style=flat-square" alt="NeurIPS 2026">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="许可证：Apache 2.0"></a>
-  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.10 或更高版本">
-  <img src="https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=flat-square&amp;logo=pytorch&amp;logoColor=white" alt="PyTorch 2.x">
-  <a href="studio/README_zh.md"><img src="https://img.shields.io/badge/Falcon%20Studio-macOS%20%7C%20Linux%20CUDA%20%7C%20Chrome-lightgrey?style=flat-square" alt="Falcon Studio：macOS、Linux CUDA 与 Chrome"></a>
+  <a href="https://cslikai.cn/Falcon/">项目主页</a> ·
+  <a href="https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/">在线体验</a> ·
+  <a href="https://huggingface.co/spaces/JusperLee/Falcon-Studio">Hugging Face Space</a> ·
+  <a href="studio/README_zh.md">Falcon Studio</a>
 </p>
+<p>
+  <strong>模型权重</strong> &nbsp;
+  <a href="https://huggingface.co/JusperLee/Falcon">Falcon</a> ·
+  <a href="https://huggingface.co/JusperLee/Falcon-Big">Falcon-Big</a>
+  <br>
+  <strong>数据集</strong> &nbsp;
+  <a href="https://huggingface.co/datasets/JusperLee/RealSSA-Sim">RealSSA-Sim</a> ·
+  <a href="https://huggingface.co/datasets/JusperLee/RealSSA-Real">RealSSA-Real</a>
+</p>
+<p>
+  <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="Visitors (README views)"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code-Apache%202.0-blue?style=flat-square" alt="Code license: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.10 or newer">
+  <img src="https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=flat-square&amp;logo=pytorch&amp;logoColor=white" alt="PyTorch 2.x">
+</p>
+
+<sub>论文链接将在公开后补充。</sub>
 
 </div>
 
@@ -45,7 +53,7 @@
 
 通话、会议和助听等对延迟敏感的应用都需要流式 AVTSE。现有因果系统面临两个相互关联的缺口：一方面，常用基准把说话人数固定为两人，忽略了近场/远场干扰、混响和突发噪声；另一方面，性能强的因果架构对边缘设备来说太重，而轻量方案靠多次调用小型分离器来弥补容量，又抵消了节省下来的计算。
 
-- **RealSSA** 是一个真实感模拟场景的 AVTSE 基准，在四类场景中包含 2–6 个动态的近场/远场说话人，并配有一个真实录制的评测集。
+- **RealSSA** 是一个真实感模拟场景的 AVTSE 基准，在四类场景中包含近场/远场干扰语音，并配有一个真实录制的评测集。
 - **Falcon** 是一个因果 AVTSE 框架。其 AudioBlock 在单次编码器–解码器中完成多尺度时频分离。
 - **编码器空间说话人对比损失** 抑制近场串音，不增加任何推理开销，并且可以迁移到其他主干网络。
 - 与因果 AV-TFGridNet 基线相比，Falcon 的参数量减少 91.9%，计算量降低 20.2 倍，GPU 推理延迟降低 11.1 倍。
@@ -67,14 +75,23 @@
 
 ## 🌆 RealSSA 基准
 
-每条 RealSSA 混合语音包含 2–6 个动态说话人：一个近场目标说话人，加上近场和远场干扰说话人，同时叠加环境噪声和突发事件。四类场景是小型会议室、中型室内空间、大型公共空间和户外街道，每类场景分别采样房间尺寸、RT60、说话人距离和 SIR。房间冲激响应用 gpuRIR 模拟。目标语音归一化到 −23 LUFS，混合语音峰值限制在 −1 dBFS，所有音频均为 16 kHz 单声道。真实录制的评测集覆盖八种环境，其中的人脸已做马赛克处理。
+已发布的 RealSSA 基准包含两个互补的数据集：
+
+| 数据集 | 内容 | 划分 | 获取与使用 |
+|---|---|---|---|
+| [**RealSSA-Sim**](https://huggingface.co/datasets/JusperLee/RealSSA-Sim) | 模拟场景；4 通道 16 kHz 混合语音与目标语音、RGB 嘴部裁剪及场景元数据 | 训练 100,826 / 验证 9,133 / 测试 9,169 条 | 申请访问、人工审核；CC BY-NC-ND 4.0 及各来源条款 |
+| [**RealSSA-Real**](https://huggingface.co/datasets/JusperLee/RealSSA-Real) | 40 段逻辑录音对应 54 段音视频配对输入；10 位说话人、8 种场景，共 83.99 分钟 | 仅测试集；另有包含 34 段录音的原始录音视图 | 申请访问、人工审核；遵守数据卡中的科研使用条件 |
+
+RealSSA-Sim 包括 `small_meeting`、`medium_indoor`、`large_public`、`outdoor` 四类场景，使用静态声源，包含近场/远场干扰语音、环境噪声与突发事件，以 240 个 WebDataset TAR 分片发布。RealSSA-Real 提供双声道 16 kHz 音频、25 fps 目标人脸视频、嘴部裁剪、关键点、说话人注册语音和录音级转写。注册语音是独立的说话人参考，不是可用于 SI-SDR 的时间对齐干净目标。
+
+**先阅读数据卡**，其中包含下载、文件格式、通道选择、时间对齐及推理示例。发布的多通道分片需要适配后才能用于当前单声道、目录式训练加载器；Sim 元数据中的源路径仅用于追溯生成输入，不提供可直接下载的近场说话人波形。原始说话人对比训练还需要这些源信号。代码和权重的许可不替代数据集的访问与使用条款。
 
 <p align="center">
   <img src="assets/realssa_scenes.jpg" alt="促成 RealSSA 的真实 AVTSE 场景：小房间、咖啡馆、商场和户外街道。" width="100%">
   <br><em>促成 RealSSA 的真实场景。从左到右：小房间、咖啡馆、商场、户外街道。</em>
 </p>
 
-<!-- TODO: RealSSA 公开后补充下载链接和许可证。 -->
+
 
 ## ⚡ 安装
 
