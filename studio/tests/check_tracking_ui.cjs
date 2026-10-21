@@ -78,7 +78,7 @@ function harness() {
     node.setAttribute(attribute, sandbox.t(key, params));
   };
   vm.createContext(sandbox);
-  vm.runInContext(`${executableSource}\nglobalThis.api = { state, setTrackingStatus, setTrackingMode, resetTrackingWindow, trackingAllowsInference, positionROI, maybeInfer, handleResult, stopCapture, captureFrame, finalizeRecording, resetRecording, onPCM };`, sandbox, { filename: 'app.js' });
+  vm.runInContext(`${executableSource}\nglobalThis.api = { state, setTrackingStatus, setTrackingMode, resetTrackingWindow, trackingAllowsInference, positionROI, maybeInfer, handleResult, stopCapture, captureFrame, finalizeRecording, resetRecording, openCapture, checkCaptureHealth, onPCM };`, sandbox, { filename: 'app.js' });
   return { ...sandbox.api, elements, sandbox, languageCallbacks, inspectorCalls };
 }
 
@@ -422,7 +422,82 @@ test('preview audio reaches the spectrum and unchanged recordings keep their see
   assert.equal(h.state.recordingFinalizedSamples, 0);
 });
 
+test('a frozen microphone is reported separately from an inference stall', () => {
+  const h = harness();
+  h.sandbox.console = { ...console, warn() {} };
+  h.sandbox.performance.now = () => 10000;
+  Object.assign(h.state, { running: true, context: { currentTime: 0 }, trackingMode: 'manual' });
+  h.checkCaptureHealth();
+  assert.match(h.elements.get('performanceHint').textContent, /麦克风采集已暂停/);
+  const diagnostic = h.sandbox.window.falconDiagnostics();
+  assert.equal(diagnostic.recordingSeconds, 0);
+  assert.ok(!('audio' in diagnostic) && !('framesData' in diagnostic), 'diagnostics contain aggregate state only');
+});
+
+function startupHarness({ resume, play, enumerate, permission } = {}) {
+  const h = harness(), timers = [], track = { kind: 'audio', stopped: 0, stop() { this.stopped++; }, addEventListener() {}, getSettings: () => ({}) };
+  const stream = { getTracks: () => [track] };
+  const node = () => ({ connect() {}, disconnect() {}, gain: { value: 0 } });
+  let requested = false;
+  class Context {
+    constructor() { this.state = 'running'; this.currentTime = 0; this.destination = {}; this.audioWorklet = { addModule: async () => {} }; }
+    resume() { return resume ? resume() : Promise.resolve(); }
+    close() { this.state = 'closed'; return Promise.resolve(); }
+    createGain() { return node(); }
+    createMediaStreamSource() { return node(); }
+  }
+  h.sandbox.AudioContext = Context;
+  h.sandbox.AudioWorkletNode = class { constructor() { this.port = {}; } connect() {} disconnect() {} };
+  h.sandbox.window.isSecureContext = true;
+  h.sandbox.navigator.mediaDevices.getUserMedia = () => { requested = true; return permission ? permission(stream) : Promise.resolve(stream); };
+  h.sandbox.navigator.mediaDevices.enumerateDevices = () => enumerate ? enumerate() : Promise.resolve([]);
+  h.sandbox.setTimeout = (fn, ms) => { const timer = { fn, ms, active: true }; timers.push(timer); return timer; };
+  h.sandbox.clearTimeout = (timer) => { if (timer && typeof timer === 'object') timer.active = false; };
+  if (play) h.elements.get('cameraVideo').play = play;
+  return { h, timers, track, stream, requested: () => requested,
+    fire: (ms) => { const timer = timers.find((timer) => timer.active && timer.ms === ms); assert.ok(timer, `Missing ${ms} ms deadline`); timer.active = false; timer.fn(); } };
+}
+const settle = async () => { for (let i = 0; i < 30; i++) await Promise.resolve(); };
+
 (async () => {
+  {
+    const { h, fire } = startupHarness({ enumerate: () => new Promise(() => {}) });
+    await h.openCapture();
+    assert.equal(h.state.opening, false, 'a stuck device list cannot disable Start');
+    assert.ok(h.state.stream);
+    fire(8000); await settle();
+    assert.match(h.elements.get('noticeText').textContent, /设备列表超时/);
+    h.stopCapture(); passed++; console.log('PASS device enumeration never blocks ready capture');
+  }
+  {
+    const { h, fire, track } = startupHarness({ play: () => new Promise(() => {}) });
+    const pending = h.openCapture(); await settle();
+    assert.equal(h.state.opening, true);
+    fire(12000); await pending;
+    assert.equal(h.state.opening, false); assert.equal(h.state.stream, null);
+    assert.ok(track.stopped); assert.match(h.elements.get('noticeText').textContent, /摄像头预览启动超时/);
+    h.elements.get('cameraVideo').play = () => Promise.resolve();
+    await h.openCapture(); assert.ok(h.state.stream, 'retry succeeds after timeout');
+    h.stopCapture(); passed++; console.log('PASS preview deadline releases devices and permits retry');
+  }
+  {
+    const { h, fire, requested, track } = startupHarness({ resume: () => new Promise(() => {}) });
+    const pending = h.openCapture(); await settle();
+    assert.equal(requested(), true, 'permission request must not wait on AudioContext.resume');
+    fire(8000); await pending;
+    assert.equal(h.state.opening, false); assert.ok(track.stopped);
+    assert.match(h.elements.get('noticeText').textContent, /音频设备启动超时/);
+    passed++; console.log('PASS suspended audio cannot hide permission request or hang startup');
+  }
+  {
+    let grant;
+    const { h, fire, stream, track } = startupHarness({ permission: () => new Promise((resolve) => { grant = resolve; }) });
+    const pending = h.openCapture(); await settle(); fire(45000); await pending;
+    grant(stream); await settle();
+    assert.ok(track.stopped, 'a late permission grant must release its device');
+    assert.equal(h.state.stream, null); assert.equal(h.state.opening, false);
+    passed++; console.log('PASS late permissions after timeout do not leak devices');
+  }
   const h = harness();
   const messages = [];
   let resolveBitmap, closed = 0;

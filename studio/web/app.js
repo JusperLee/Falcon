@@ -37,6 +37,41 @@ const clamp = (n, low, high) => Math.min(high, Math.max(low, n));
 const duration = (seconds) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
 const audioInspector = createAudioInspector({ player: $('recordingPlayer'), onError: (message) => notice(message, true) });
 
+// Aggregate-only troubleshooting: no PCM, images, cookies or device identifiers.
+const captureHealth = { inputAt: 0, frameAt: 0, resultAt: 0, inputRms: 0, outputRms: 0, startedAt: 0, warning: '' };
+window.falconDiagnostics = () => ({
+  running: state.running, opening: state.opening, audioState: state.context?.state || 'closed',
+  videoMode: state.videoMode, tracking: state.trackingStatus, searching: state.searching,
+  samples: state.samples, frames: state.frames.length, sentWindows: state.sequence,
+  recordingSeconds: state.recordingSamples / RATE,
+  pendingMs: state.inFlight ? Math.round(performance.now() - state.inFlight.time) : null,
+  inputRms: captureHealth.inputRms, outputRms: captureHealth.outputRms,
+  inputAgeMs: Math.round(performance.now() - captureHealth.inputAt),
+  frameAgeMs: Math.round(performance.now() - captureHealth.frameAt),
+  resultAgeMs: Math.round(performance.now() - captureHealth.resultAt), warning: captureHealth.warning,
+});
+function checkCaptureHealth() {
+  if (!state.running || state.draining || performance.now() - captureHealth.startedAt < 5000) return;
+  const now = performance.now();
+  let warning = '';
+  if (now - captureHealth.inputAt > 3000) warning = '麦克风采集已暂停，请检查设备或浏览器是否挂起。';
+  else if (now - captureHealth.frameAt > 3000) warning = '尚无新的有效嘴部画面，请检查摄像头、取景和自动检测状态。';
+  else if (state.inFlight && now - state.inFlight.time > 5000) warning = '正在等待模型响应，请检查网络连接。';
+  else if (!state.inFlight && now - captureHealth.resultAt > 5000) warning = '音视频尚未对齐，暂未发送新的推理请求。';
+  else if (captureHealth.inputRms < .00001) warning = '麦克风输入接近静音，请确认选中了正在使用的麦克风。';
+  else if (captureHealth.outputRms < .000001 && now - captureHealth.resultAt < 2000) warning = '模型返回接近静音，请确认嘴部取景与当前说话者一致。';
+  if (warning) setText($('performanceHint'), warning);
+  if (warning && warning !== captureHealth.warning) console.warn('Falcon capture diagnostics', window.falconDiagnostics(), warning);
+  captureHealth.warning = warning;
+}
+setInterval(checkCaptureHealth, 1000);
+
+function bounded(promise, milliseconds, message) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), milliseconds);
+    Promise.resolve(promise).then(resolve, reject).finally(() => clearTimeout(timer));
+  });
+}
 function notice(message, error = false, params = {}) {
   setText($('noticeText'), message, params);
   $('notice').classList.toggle('error', error);
@@ -143,7 +178,9 @@ async function loadModel(variant = $('modelSelect').value || 'small') {
 }
 
 async function enumerateDevices() {
-  const devices = await navigator.mediaDevices.enumerateDevices();
+  const generation = state.generation;
+  const devices = await bounded(navigator.mediaDevices.enumerateDevices(), 8000, '读取设备列表超时，可继续使用当前设备。');
+  if (generation !== state.generation) return;
   const tracks = state.stream?.getTracks() || [];
   for (const [id, kind, trackKind, label] of [['cameraSelect', 'videoinput', 'video', '摄像头'], ['micSelect', 'audioinput', 'audio', '麦克风']]) {
     const select = $(id);
@@ -194,12 +231,22 @@ async function openCapture(deviceIds = {}) {
   try {
     // Resume in the user gesture, before the permission prompt resolves (Safari requirement).
     context = new AudioContext({ latencyHint: 'interactive' });
-    await context.resume();
-    stream = await navigator.mediaDevices.getUserMedia({
+    // Invoke resume in the click gesture, but do not block the permission request on it.
+    const resumed = context.resume();
+    resumed.catch(() => {});
+    const requested = navigator.mediaDevices.getUserMedia({
       video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: FPS }, ...(deviceIds.camera ? { deviceId: { exact: deviceIds.camera } } : {}) },
       audio: { channelCount: { ideal: 1 }, echoCancellation: false, noiseSuppression: false, autoGainControl: false, ...(deviceIds.microphone ? { deviceId: { exact: deviceIds.microphone } } : {}) },
     });
-    if (generation !== state.generation) { stream.getTracks().forEach((track) => track.stop()); await context.close(); return; }
+    // A permission/device request can finish after cancellation or its deadline.
+    requested.then((lateStream) => {
+      if (generation !== state.generation) lateStream.getTracks().forEach((track) => track.stop());
+    }, () => {});
+    stream = await bounded(requested, 45000, '设备授权或启动超过 45 秒，请检查浏览器权限及设备是否被占用后重试。');
+    if (generation !== state.generation) { stream.getTracks().forEach((track) => track.stop()); void context.close().catch(() => {}); return; }
+    setSession('正在启动音频设备');
+    await bounded(resumed, 8000, '音频设备启动超时，请停止其他占用麦克风的程序后重试。');
+    if (generation !== state.generation) { stream.getTracks().forEach((track) => track.stop()); void context.close().catch(() => {}); return; }
     state.stream = stream;
     state.context = context;
     state.monitorGain = context.createGain();
@@ -207,6 +254,7 @@ async function openCapture(deviceIds = {}) {
     state.monitorGain.connect(context.destination);
     state.meetingGain = context.createGain();
     state.meetingGain.gain.value = 0;
+    Object.assign(captureHealth, { inputAt: performance.now(), frameAt: performance.now(), resultAt: performance.now(), inputRms: 0, outputRms: 0, warning: '' });
     state.audioOrigin = null;
     state.samples = 0;
     state.frames = [];
@@ -214,8 +262,11 @@ async function openCapture(deviceIds = {}) {
     audioInspector.resetLive();
     state.ring.fill(0);
     $('cameraVideo').srcObject = stream;
-    await $('cameraVideo').play();
-    await context.audioWorklet.addModule('/static/capture-worklet.js');
+    setSession('正在启动摄像头预览');
+    await bounded($('cameraVideo').play(), 12000, '摄像头预览启动超时，请检查摄像头是否被其他程序占用后重试。');
+    if (generation !== state.generation) return;
+    setSession('正在加载音频采集模块');
+    await bounded(context.audioWorklet.addModule('/static/capture-worklet.js'), 15000, '音频采集模块加载超时，请检查网络后重试。');
     if (generation !== state.generation) return;
     state.source = context.createMediaStreamSource(stream);
     state.worklet = new AudioWorkletNode(context, 'falcon-capture', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [1] });
@@ -233,12 +284,13 @@ async function openCapture(deviceIds = {}) {
     setText($('cameraState').querySelector('span'), '设备已连接');
     setText($('inputCaption'), '实时麦克风输入');
     refreshTrackingUI();
-    await enumerateDevices();
+    // Enumeration is optional; a slow device driver must not keep Start disabled.
+    void enumerateDevices().catch((error) => { if (generation === state.generation) notice(errorMessage(error), true); });
     positionROI();
     if (state.videoMode === 'fallback') captureFrame();
   } catch (error) {
     stream?.getTracks().forEach((track) => track.stop());
-    if (context && context.state !== 'closed') await context.close();
+    if (context && context.state !== 'closed') void context.close().catch(() => {});
     if (generation === state.generation) { stopCapture(); notice(errorMessage(error), true); }
   } finally {
     if (generation === state.generation) { state.opening = false; updateButtons(); }
@@ -260,6 +312,7 @@ function onPCM({ samples, startTime }) {
     energy += sample * sample;
   }
   const rms = Math.sqrt(energy / samples.length);
+  captureHealth.inputAt = performance.now(); captureHealth.inputRms = rms;
   $('inputLevel').textContent = rms > .00001 ? `${Math.max(-99, 20 * Math.log10(rms)).toFixed(0)} dB` : '−∞ dB';
   state.inputWave.push(rms);
   if (state.inputWave.length > 140) state.inputWave.splice(0, state.inputWave.length - 140);
@@ -477,6 +530,7 @@ async function startVideoCapture(generation) {
 }
 function addFrame(time, data) {
   if (!trackingAllowsInference() || state.draining) return;
+  captureHealth.frameAt = performance.now();
   state.frames.push({ time, data });
   while (state.frames.length > FPS * 6 || (state.frames[0] && state.frames[0].time < time - 6)) state.frames.shift();
   maybeInfer();
@@ -632,6 +686,8 @@ async function startSession() {
     socket.onclose = () => { if (generation === state.generation && state.running) { stopCapture(); notice('分离服务连接已关闭，录音已保留。', true); } };
     resetRecording();
     state.running = true;
+    captureHealth.startedAt = captureHealth.resultAt = performance.now();
+    captureHealth.warning = '';
     audioInspector.setRunning(true);
     ++state.inferenceEpoch;
     state.sessionEpoch = state.samples;
@@ -683,6 +739,8 @@ function handleResult(raw) {
     result.end_sample -= offset;
     if (Number.isFinite(result.end_sample) && state.lastResultEnd !== null && result.end_sample <= state.lastResultEnd) return;
     if (Number.isFinite(result.end_sample)) state.lastResultEnd = result.end_sample;
+    captureHealth.resultAt = performance.now();
+    captureHealth.outputRms = Math.sqrt(samples.reduce((sum, value) => sum + value * value, 0) / samples.length);
     audioInspector.pushOutput(samples);
     const remaining = MAX_RECORDING_SECONDS * RATE - state.recordingSamples;
     const kept = samples.subarray(0, Math.max(0, remaining));

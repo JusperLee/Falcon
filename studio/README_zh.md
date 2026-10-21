@@ -185,3 +185,9 @@ for t in tests/*.mjs tests/*.cjs web/*.test.cjs; do node "$t"; done
 ```
 
 使用真实 MediaPipe 模型的跟踪测试需要在浏览器中运行：执行 `FALCON_QA_PORT=8766 python tests/serve_browser.py`，用 Chrome 打开 `http://127.0.0.1:8766/__test/` 并点击按钮。测试使用公开的测试人像，不访问摄像头。
+
+### 设备启动或采集停住时
+
+设备启动会显示具体阶段，预览、音频模块等步骤超时后会释放设备并允许重试。设备列表加载不会阻止开始分离。运行中会分别提示麦克风停止送入数据、输入接近静音、缺少有效嘴部画面、音视频未对齐或模型响应慢。
+
+若需排查，可在浏览器开发者工具控制台执行 `JSON.stringify(window.falconDiagnostics(), null, 2)`，提供设备/浏览器版本和返回内容。该诊断只包含采样计数、帧数、输入输出能量和状态，不包含音频、图像或 Cookie。它不能替代真实录音的音质检查。

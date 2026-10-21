@@ -1,6 +1,22 @@
 // Chinese source keys remain stable while bound UI text follows the chosen language.
 // Device names, numeric metrics and audio samples are intentionally language-neutral.
 export default {
+  "麦克风采集已暂停，请检查设备或浏览器是否挂起。": "Microphone capture has paused. Check the device or whether the browser is suspended.",
+  "尚无新的有效嘴部画面，请检查摄像头、取景和自动检测状态。": "No fresh valid mouth frames. Check the camera, crop and tracking status.",
+  "正在等待模型响应，请检查网络连接。": "Waiting for the model response. Check your connection.",
+  "音视频尚未对齐，暂未发送新的推理请求。": "Audio and video are not aligned yet; no new inference request has been sent.",
+  "麦克风输入接近静音，请确认选中了正在使用的麦克风。": "Microphone input is almost silent. Check the selected microphone.",
+  "模型返回接近静音，请确认嘴部取景与当前说话者一致。": "The model returned near-silence. Check that the mouth crop matches the current speaker.",
+
+  "读取设备列表超时，可继续使用当前设备。": "Device listing timed out. You can continue with the current devices.",
+  "设备授权或启动超过 45 秒，请检查浏览器权限及设备是否被占用后重试。": "Device permission or startup exceeded 45 seconds. Check browser permissions and whether another app is using the devices, then retry.",
+  "正在启动音频设备": "Starting the audio device",
+  "音频设备启动超时，请停止其他占用麦克风的程序后重试。": "Audio startup timed out. Close other apps using the microphone, then retry.",
+  "正在启动摄像头预览": "Starting the camera preview",
+  "摄像头预览启动超时，请检查摄像头是否被其他程序占用后重试。": "Camera preview timed out. Check whether another app is using the camera, then retry.",
+  "正在加载音频采集模块": "Loading the audio capture module",
+  "音频采集模块加载超时，请检查网络后重试。": "The audio capture module timed out. Check your connection, then retry.",
+
   '原始音频窗口已失效，请重新开始分离。': 'The original audio window is unavailable. Please start separation again.',
   '16 kHz · 单声道 · 本次片段已就绪': '16 kHz · Mono · Recording ready',
   'AUTO / 嘴部': 'AUTO / MOUTH',

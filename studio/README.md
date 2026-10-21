@@ -185,3 +185,9 @@ for t in tests/*.mjs tests/*.cjs web/*.test.cjs; do node "$t"; done
 ```
 
 The tracking test with the real MediaPipe model runs in a browser: start `FALCON_QA_PORT=8766 python tests/serve_browser.py`, open `http://127.0.0.1:8766/__test/` in Chrome and click the button. It uses a public test portrait and no camera.
+
+### Device startup or capture stalls
+
+Startup shows its current stage and releases devices on preview/audio initialization timeouts so it can be retried. Device enumeration does not block Start. Runtime hints distinguish stalled microphone capture, near-silent input, missing mouth frames, alignment waits and slow inference responses.
+
+For troubleshooting, run `JSON.stringify(window.falconDiagnostics(), null, 2)` in the browser console and include the browser/device version. This exposes aggregate counters, input/output energy and state only, with no audio, images or cookies. It does not evaluate separation quality.
