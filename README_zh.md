@@ -20,7 +20,7 @@
 **NeurIPS 2026**
 
 <!-- TODO: 论文和数据集公开后补充链接。 -->
-[**论文 (TODO)**](#) | [**🎙️ 在线体验**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**项目主页**](https://cslikai.cn/Falcon/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-基准) | [**Falcon Studio**](studio/README_zh.md)
+[**论文 (TODO)**](#) | [**🎙️ 在线体验**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**🤗 Space**](https://huggingface.co/spaces/JusperLee/Falcon-Studio) | [**项目主页**](https://cslikai.cn/Falcon/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-基准) | [**Falcon Studio**](studio/README_zh.md)
 
 <p>
   <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="访客数（README 浏览次数）" title="统计 README 徽章的加载次数，不是独立访客数"></a>
@@ -37,6 +37,7 @@
 
 ## 💥 动态
 
+- **[2026-10-21]** **Falcon Studio** 上线 [Hugging Face ZeroGPU Space](https://huggingface.co/spaces/JusperLee/Falcon-Studio)：在浏览器中录一段，再在 GPU 上分离。
 - **[2026-10-20]** 开源训练、评测与推理代码，并发布 **Falcon Studio**：可接入 Zoom / 腾讯会议的实时演示。
 - **[2026-09-24]** Falcon 被 **NeurIPS 2026** 接收。
 
@@ -112,7 +113,7 @@ pip install -r studio/requirements.txt
 
 ### Falcon Studio：实时分离与视频会议
 
-在线版的链接见本页顶部。
+本页顶部有两个在线版：「在线体验」在 GPU 服务器上运行 Falcon Studio，实时分离；[Hugging Face Space](https://huggingface.co/spaces/JusperLee/Falcon-Studio) 先录最长 60 秒，再在 ZeroGPU 上按实时工作台的窗口分离。Space 的代码在 [`space/`](space/README_zh.md)。
 
 Falcon Studio 在本机运行模型，在浏览器中用 MediaPipe 跟踪说话人的嘴部，把分离后的声音播放到耳机，或通过虚拟音频设备（BlackHole）送入 Zoom / 腾讯会议。在 macOS 上双击 `studio/Start Falcon.command`，或运行：
 
@@ -222,6 +223,7 @@ Falcon/
 ├── Experiments/checkpoint/   # 配置快照与最优 checkpoint 记录（权重需另行下载）
 ├── assets/                   # README 图片
 ├── project_page/             # 项目主页与 demo 样例（https://cslikai.cn/Falcon/；音视频在 oss.cslikai.cn）
+├── space/                    # Hugging Face ZeroGPU Space：先录制、再分离（build.py 与 studio/ 一起组装）
 └── studio/                   # Falcon Studio
     ├── server.py             # 本地 FastAPI + WebSocket 推理服务
     ├── falcon_runtime.py     # Hugging Face 权重下载、严格加载、2 秒窗口推理

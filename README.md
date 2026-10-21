@@ -18,7 +18,7 @@
 **NeurIPS 2026**
 
 <!-- TODO: fill in the links once the paper, weights and dataset are public. -->
-[**Paper (TODO)**](#) | [**🎙️ Live demo**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**Project page**](https://cslikai.cn/Falcon/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-benchmark) | [**Falcon Studio**](studio/README.md)
+[**Paper (TODO)**](#) | [**🎙️ Live demo**](https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/) | [**🤗 Space**](https://huggingface.co/spaces/JusperLee/Falcon-Studio) | [**Project page**](https://cslikai.cn/Falcon/) | [**🤗 Falcon**](https://huggingface.co/JusperLee/Falcon) | [**🤗 Falcon-Big**](https://huggingface.co/JusperLee/Falcon-Big) | [**RealSSA (TODO)**](#-realssa-benchmark) | [**Falcon Studio**](studio/README.md)
 
 <p>
   <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="Visitors (README views)" title="Counts README badge views, not unique visitors"></a>
@@ -35,6 +35,7 @@
 
 ## 💥 News
 
+- **[2026-10-21]** **Falcon Studio** on a [Hugging Face ZeroGPU Space](https://huggingface.co/spaces/JusperLee/Falcon-Studio): record a clip in the browser, then separate it on a GPU.
 - **[2026-10-20]** Training, evaluation and inference code released, together with **Falcon Studio**, a real-time demo that plugs into Zoom / Tencent Meeting.
 - **[2026-09-24]** Falcon is accepted to **NeurIPS 2026**.
 
@@ -110,7 +111,7 @@ The files contain only the `audio_model.*` and `video_model.*` weights. Training
 
 ### Falcon Studio: live separation and meetings
 
-An online instance is linked at the top of this page.
+Two online instances are linked at the top of this page: the live demo runs Falcon Studio on a GPU server; the [Hugging Face Space](https://huggingface.co/spaces/JusperLee/Falcon-Studio) records a clip of up to 60 s and separates it afterwards on ZeroGPU, with the live Studio's windows. Its code is in [`space/`](space/README.md).
 
 Falcon Studio runs the model locally, tracks the speaker's mouth with MediaPipe in the browser, and plays the separated voice on headphones or sends it to Zoom / Tencent Meeting through a virtual audio device (BlackHole). On macOS, double-click `studio/Start Falcon.command`, or run:
 
@@ -220,6 +221,7 @@ Falcon/
 ├── Experiments/checkpoint/   # config snapshot and best-checkpoint metadata (weights downloaded separately)
 ├── assets/                   # README figures
 ├── project_page/             # project page with demo samples (https://cslikai.cn/Falcon/; media on oss.cslikai.cn)
+├── space/                    # Hugging Face ZeroGPU Space: record, then separate (build.py assembles it with studio/)
 └── studio/                   # Falcon Studio
     ├── server.py             # local FastAPI + WebSocket inference server
     ├── falcon_runtime.py     # Hugging Face weight download, strict loading, 2 s windowed inference

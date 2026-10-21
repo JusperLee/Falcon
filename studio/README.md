@@ -14,6 +14,8 @@
 > The real-time demo of the [Falcon](../README.md) repository. The paper, training and evaluation code are described in the root README.
 
 > **🎙️ Try it online:** <https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/> (Chrome). It runs on a GPU server, so camera and microphone data are sent to that server. The rest of this guide covers the local install.
+>
+> **🤗 Hugging Face Space:** <https://huggingface.co/spaces/JusperLee/Falcon-Studio>. The same interface records a clip of up to 60 s and separates it afterwards on ZeroGPU, without headphone monitoring or meeting output. Audio and mouth crops are sent to the Space. See [`space/`](../space/README.md).
 
 Falcon Studio runs Falcon audio-visual target speaker extraction live on a Mac, or on Linux with an NVIDIA GPU. The browser captures the microphone and camera and tracks the speaker's mouth; a local Python service runs the model and sends the separated voice back for headphone monitoring, recording, or a video meeting (Zoom / Tencent Meeting).
 

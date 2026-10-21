@@ -14,6 +14,8 @@
 > 本目录是 [Falcon](../README.md) 仓库的实时演示部分。论文、训练与评测代码见仓库根目录 README。
 
 > **🎙️ 在线体验：** <https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/>（Chrome）。在线版运行在 GPU 服务器上，摄像头和麦克风数据会发送到该服务器。本文其余部分介绍本地安装。
+>
+> **🤗 Hugging Face Space：** <https://huggingface.co/spaces/JusperLee/Falcon-Studio>。同一界面先录最长 60 秒，再在 ZeroGPU 上分离，没有耳机监听和会议输出。音频和嘴部画面会发送到 Space。见 [`space/`](../space/README_zh.md)。
 
 Falcon Studio 在 Mac 或带 NVIDIA GPU 的 Linux 上实时运行 Falcon 音视频目标说话人提取。浏览器采集麦克风和摄像头并跟踪说话者的嘴部；本机 Python 服务运行模型，把分离出的目标语音送回浏览器，用于耳机监听、录音，或接入视频会议（Zoom / 腾讯会议）。
 
