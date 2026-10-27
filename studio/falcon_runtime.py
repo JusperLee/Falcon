@@ -35,6 +35,8 @@ VARIANTS = {
             "architecture": "SpeakerContrastiveV2"},
 }
 MODEL_CLASSES = {"FalconSpeakerContrastive": FalconSpeakerContrastive, "SpeakerContrastiveV2": SpeakerContrastiveV2}
+# The Hub counts a model download when config.yaml is requested; requests for the .pt weights are not counted.
+HUB_COUNTED_FILE = "config.yaml"
 
 
 def variant_for(name: str) -> str:
@@ -72,10 +74,31 @@ def resolve_checkpoint(variant: str, checkpoint: str | Path | None = None) -> Pa
         raise FileNotFoundError("huggingface_hub is not installed (pip install huggingface_hub); "
                                 "or pass a local weights file.") from exc
     try:
-        return Path(hf_hub_download(repo_id=repo_id, filename=filename))
+        path = Path(hf_hub_download(repo_id=repo_id, filename=filename))
     except Exception as exc:
         raise FileNotFoundError(f"Could not download {filename} from Hugging Face repo {repo_id}: {exc}. "
                                 "Set HF_ENDPOINT to a mirror, or pass a local weights file.") from exc
+    count_download(repo_id)
+    return path
+
+
+def count_download(repo_id: str) -> threading.Thread:
+    """HEAD the repo's config.yaml in the background so this load shows in the Hub's download stats.
+
+    Best effort and never delays loading: offline, a mirror or a repo without the file only skips
+    the count. HF_HUB_DISABLE_TELEMETRY=1 turns it off.
+    """
+    def head():
+        try:
+            from huggingface_hub import constants, get_hf_file_metadata, hf_hub_url
+            if not constants.HF_HUB_DISABLE_TELEMETRY:
+                get_hf_file_metadata(hf_hub_url(repo_id, HUB_COUNTED_FILE))
+        except Exception:
+            pass
+
+    thread = threading.Thread(target=head, name="hub-download-count", daemon=True)
+    thread.start()
+    return thread
 
 
 def pick_device(requested: str = "auto") -> str:

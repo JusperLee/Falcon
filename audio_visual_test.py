@@ -325,5 +325,10 @@ if __name__ == "__main__":
         from huggingface_hub import hf_hub_download
         repo_id, _, filename = args.ckpt_path[len("hf://"):].rpartition("/")
         arg_dic["ckpt_path"] = hf_hub_download(repo_id=repo_id, filename=filename)
+        try:  # The Hub counts downloads by config.yaml, not by the weights file; best effort.
+            from huggingface_hub import get_hf_file_metadata, hf_hub_url
+            get_hf_file_metadata(hf_hub_url(repo_id, "config.yaml"))
+        except Exception:
+            pass
 
     main(arg_dic)

@@ -122,7 +122,7 @@ pip install -r studio/requirements.txt
 
 \*Including the frozen 11.2 M-parameter FRCNN lip-reading encoder. The paper counts trainable parameters only (0.5 M for Falcon).
 
-Nothing needs to be downloaded by hand. Falcon Studio, `infer_file.py` and `FalconRuntime.from_pretrained` load the weights from these Hugging Face short links on first use and cache them in `~/.cache/huggingface`. If huggingface.co is slow or blocked, set a mirror, e.g. `export HF_ENDPOINT=https://hf-mirror.com`. A local file can be passed with `--checkpoint`, for example one fetched with `hf download JusperLee/Falcon falcon.pt --local-dir weights`.
+Nothing needs to be downloaded by hand. Falcon Studio, `infer_file.py` and `FalconRuntime.from_pretrained` load the weights from these Hugging Face short links on first use and cache them in `~/.cache/huggingface`. Each load also sends a HEAD request for the repo's `config.yaml`, the file the Hub counts downloads by (the `.pt` weights are not counted); `HF_HUB_DISABLE_TELEMETRY=1` turns it off. If huggingface.co is slow or blocked, set a mirror, e.g. `export HF_ENDPOINT=https://hf-mirror.com`. A local file can be passed with `--checkpoint`, for example one fetched with `hf download JusperLee/Falcon falcon.pt --local-dir weights`.
 
 The files contain only the `audio_model.*` and `video_model.*` weights. Training additionally needs the pretrained visual backbone `frcnn_128_512.backbone.pth.tar` in `pretrain_zoo/` (see Training and evaluation below).
 

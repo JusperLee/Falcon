@@ -122,7 +122,7 @@ pip install -r studio/requirements.txt
 
 \*包含冻结的 11.2 M 参数 FRCNN 唇读编码器。论文只统计可训练参数（Falcon 为 0.5 M）。
 
-不需要手动下载权重。Falcon Studio、`infer_file.py` 和 `FalconRuntime.from_pretrained` 会在首次使用时通过上面的 Hugging Face 短链下载权重，并缓存在 `~/.cache/huggingface`。访问 huggingface.co 较慢或无法访问时，可以设置镜像，例如 `export HF_ENDPOINT=https://hf-mirror.com`。也可以用 `--checkpoint` 传入本地文件，例如用 `hf download JusperLee/Falcon falcon.pt --local-dir weights` 下载的文件。
+不需要手动下载权重。Falcon Studio、`infer_file.py` 和 `FalconRuntime.from_pretrained` 会在首次使用时通过上面的 Hugging Face 短链下载权重，并缓存在 `~/.cache/huggingface`。每次加载还会对仓库里的 `config.yaml` 发一个 HEAD 请求，Hub 按这个文件统计下载量（`.pt` 权重不计数）；设置 `HF_HUB_DISABLE_TELEMETRY=1` 可关闭。访问 huggingface.co 较慢或无法访问时，可以设置镜像，例如 `export HF_ENDPOINT=https://hf-mirror.com`。也可以用 `--checkpoint` 传入本地文件，例如用 `hf download JusperLee/Falcon falcon.pt --local-dir weights` 下载的文件。
 
 权重文件只包含 `audio_model.*` 和 `video_model.*` 的参数。训练时还需要把预训练视觉主干 `frcnn_128_512.backbone.pth.tar` 放到 `pretrain_zoo/`（见下文「训练与评测」）。
 
