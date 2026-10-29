@@ -21,6 +21,8 @@ preload_from_hub:
 
 **English** | [中文](README_zh.md)
 
+Paper: [arXiv:2610.32749](https://arxiv.org/abs/2610.32749) (NeurIPS 2026)
+
 The [Falcon Studio](https://github.com/JusperLee/Falcon/tree/main/studio) interface on a ZeroGPU Space. Record a clip with your camera and microphone; Falcon extracts the voice of the speaker whose mouth is in the frame.
 
 ZeroGPU attaches a GPU for each call and counts it against a daily quota, so the live Studio's loop of one call every 0.5 s does not fit. This Space records first and separates afterwards. For live separation, headphone monitoring and meeting output, run Falcon Studio locally.

@@ -2,6 +2,8 @@
 
 [English](README.md) | **中文**
 
+论文：[arXiv:2610.32749](https://arxiv.org/abs/2610.32749)（NeurIPS 2026）
+
 运行在 ZeroGPU Space 上的 [Falcon Studio](https://github.com/JusperLee/Falcon/tree/main/studio) 界面。用摄像头和麦克风录一段，Falcon 会提取画面中嘴部对应的说话者的声音。
 
 ZeroGPU 每次调用临时分配 GPU，并计入每日配额，不适合实时工作台每 0.5 秒调用一次的循环。所以这个 Space 先录制、再分离。实时分离、耳机监听和会议接入请在本地运行 Falcon Studio。

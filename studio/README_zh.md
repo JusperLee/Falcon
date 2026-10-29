@@ -11,7 +11,7 @@
 
 [English](README.md) | **中文**
 
-> 本目录是 [Falcon](../README.md) 仓库的实时演示部分。论文、训练与评测代码见仓库根目录 README。
+> 本目录是 [Falcon](../README.md) 仓库的实时演示部分。论文：[arXiv:2610.32749](https://arxiv.org/abs/2610.32749)。训练与评测代码见仓库根目录 README。
 
 > **🎙️ 在线体验：** <https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/>（Chrome）。在线版运行在 GPU 服务器上，摄像头和麦克风数据会发送到该服务器。本文其余部分介绍本地安装。
 >

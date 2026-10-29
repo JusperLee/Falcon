@@ -11,7 +11,7 @@
 
 **English** | [中文](README_zh.md)
 
-> The real-time demo of the [Falcon](../README.md) repository. The paper, training and evaluation code are described in the root README.
+> The real-time demo of the [Falcon](../README.md) repository. Paper: [arXiv:2610.32749](https://arxiv.org/abs/2610.32749). Training and evaluation code are described in the root README.
 
 > **🎙️ Try it online:** <https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/> (Chrome). It runs on a GPU server, so camera and microphone data are sent to that server. The rest of this guide covers the local install.
 >

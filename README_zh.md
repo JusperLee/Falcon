@@ -16,6 +16,7 @@ Wendi Sang<sup>\*</sup>, Kai Li<sup>\*</sup>, Yifan Li, Jianqiang Huang, Xiaolin
 <sub><sup>\*</sup>共同第一作者</sub>
 
 <p>
+  <a href="https://arxiv.org/abs/2610.32749">arXiv 论文</a> ·
   <a href="https://cslikai.cn/Falcon/">项目主页</a> ·
   <a href="https://u464727-dmja-7896a455.bjb3.seetacloud.com:8443/">在线体验</a> ·
   <a href="https://huggingface.co/spaces/JusperLee/Falcon-Studio">Hugging Face Space</a> ·
@@ -37,14 +38,13 @@ Wendi Sang<sup>\*</sup>, Kai Li<sup>\*</sup>, Yifan Li, Jianqiang Huang, Xiaolin
   <img src="https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=flat-square&amp;logo=pytorch&amp;logoColor=white" alt="PyTorch 2.x">
 </p>
 
-<sub>论文链接将在公开后补充。</sub>
-
 </div>
 
 > Falcon 是一个因果音视频目标说话人提取（AVTSE）模型，在单次编码器–解码器前向中完成分离。它以 0.5 M 可训练参数在 RealSSA、LRS2-2Mix、LRS3-2Mix 和 VoxCeleb2-2Mix 上取得最优效果，并能在笔记本电脑上实时用于视频会议。
 
 ## 💥 动态
 
+- **[2026-10-23]** 论文已发布在 [arXiv](https://arxiv.org/abs/2610.32749)。
 - **[2026-10-21]** **Falcon Studio** 上线 [Hugging Face ZeroGPU Space](https://huggingface.co/spaces/JusperLee/Falcon-Studio)：在浏览器中录一段，再在 GPU 上分离。
 - **[2026-10-20]** 开源训练、评测与推理代码，并发布 **Falcon Studio**：可接入 Zoom / 腾讯会议的实时演示。
 - **[2026-09-24]** Falcon 被 **NeurIPS 2026** 接收。
@@ -225,7 +225,7 @@ python evaluated_mac_params.py
 | Dolphin | 5.6 | 18.1 | 2411.0 | 87.9 | 560.2 | 390.3 |
 | **Falcon（本文）** | **0.5** | 10.6 | 1361.2 | 51.3 | 125.3 | 364.7 |
 
-Dolphin 和 AV-Mossformer2 在我们的训练流程下重新实现为因果版本；其余基线采用 Swift-Net 报告的数值。消融实验和真实场景 NISQA 结果见论文。
+Dolphin 和 AV-Mossformer2 在我们的训练流程下重新实现为因果版本；其余基线采用 Swift-Net 报告的数值。消融实验和真实场景 NISQA 结果见[论文](https://arxiv.org/abs/2610.32749)。
 
 ## 🗂️ 目录结构
 
