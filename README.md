@@ -32,6 +32,9 @@ Wendi Sang<sup>\*</sup>, Kai Li<sup>\*</sup>, Yifan Li, Jianqiang Huang, Xiaolin
   <a href="https://huggingface.co/datasets/JusperLee/RealSSA-Real">RealSSA-Real</a>
 </p>
 <p>
+  <a href="https://huggingface.co/papers/2610.32749"><img src="assets/hf-paper-of-the-day.svg" alt="#1 Paper of the Day on Hugging Face Daily Papers" width="224"></a>
+</p>
+<p>
   <a href="https://visitor-badge.laobi.icu/"><img src="https://visitor-badge.laobi.icu/badge?page_id=JusperLee.Falcon&amp;left_text=Visitors&amp;left_color=%23555555&amp;right_color=%23007ec6&amp;radius=0" alt="Visitors (README views)"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/code-Apache%202.0-blue?style=flat-square" alt="Code license: Apache 2.0"></a>
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&amp;logo=python&amp;logoColor=white" alt="Python 3.10 or newer">
@@ -44,6 +47,7 @@ Wendi Sang<sup>\*</sup>, Kai Li<sup>\*</sup>, Yifan Li, Jianqiang Huang, Xiaolin
 
 ## 💥 News
 
+- **[2026-10-29]** **#1 Paper of the Day** on [Hugging Face Daily Papers](https://huggingface.co/papers/2610.32749).
 - **[2026-10-23]** The paper is on [arXiv](https://arxiv.org/abs/2610.32749).
 - **[2026-10-21]** **Falcon Studio** on a [Hugging Face ZeroGPU Space](https://huggingface.co/spaces/JusperLee/Falcon-Studio): record a clip in the browser, then separate it on a GPU.
 - **[2026-10-20]** Training, evaluation and inference code released, together with **Falcon Studio**, a real-time demo that plugs into Zoom / Tencent Meeting.
