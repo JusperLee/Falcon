@@ -143,6 +143,23 @@ class GlobalLayerNorm(nn.Module):
         return self.norm(x)
 
 
+class CumulativeGroupNorm(GlobalLayerNorm):
+    """因果的 GroupNorm(1)：第 t 步只用 C、W 以及 H 上第 0..t 步的统计量。"""
+
+    def forward(self, x: torch.Tensor):
+        # input size: (Batch, Channel, Height, Width)，H 对应时间步
+        B, C, H, W = x.size()
+        cum_sum = torch.cumsum(x.sum(dim=(1, 3), keepdim=True), dim=2)  # (B, 1, H, 1)
+        cum_pow_sum = torch.cumsum(x.pow(2).sum(dim=(1, 3), keepdim=True), dim=2)  # (B, 1, H, 1)
+        entry_cnt = torch.arange(1, H + 1, dtype=x.dtype, device=x.device).view(1, 1, -1, 1) * (C * W)
+
+        cum_mean = cum_sum / entry_cnt
+        cum_var = (cum_pow_sum / entry_cnt - cum_mean.pow(2)).clamp_min(0)
+        x = (x - cum_mean) / (cum_var + self.eps).sqrt()
+        # 沿用 GroupNorm 的仿射参数，现有权重可以原样加载
+        return x * self.norm.weight.view(1, -1, 1, 1) + self.norm.bias.view(1, -1, 1, 1)
+
+
 class LayerNormalization4D(nn.Module):
     def __init__(self, input_dimension: Iterable, eps: float = EPS):
         super(LayerNormalization4D, self).__init__()
@@ -204,16 +221,16 @@ class CumulateLN4D(nn.Module):
 class LayerNormalizationHW(nn.Module):
     def __init__(self, num_channels, eps=1e-8):
         super(LayerNormalizationHW, self).__init__()
-        # 使用 GlobalLayerNorm 对 W 维度归一化
-        self.global_layer_norm = GlobalLayerNorm(num_channels=num_channels, eps=eps)
+        # 对 C 和 W 维度做因果的 GroupNorm（属性名不变，权重的键保持一致）
+        self.global_layer_norm = CumulativeGroupNorm(num_channels=num_channels, eps=eps)
         # 使用 CumulateLN 对 H 维度进行归一化
         self.cumulate_ln = CumulateLN4D(dimension=num_channels, eps=eps)
 
     def forward(self, x):
         # 输入形状为 (B, C, H, W)
-        
-        # 对 W 维度进行 GlobalLayerNorm
-        x = self.global_layer_norm(x)  # 对 C 和 W 维度执行归一化
+
+        # 因果 GroupNorm：统计量覆盖 C、W 以及 H 上截至当前的所有步
+        x = self.global_layer_norm(x)
 
         # 对 H 维度进行 CumulateLN 归一化
         x = self.cumulate_ln(x)  # (B, C, H, W) 使用 CumulateLN 对 H 维度归一化

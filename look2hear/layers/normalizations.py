@@ -143,6 +143,23 @@ class GlobalLayerNorm(nn.Module):
         return self.norm(x)
 
 
+class CumulativeGroupNorm(GlobalLayerNorm):
+    """GroupNorm(1) with causal statistics: step t is normalized over C, W and the H steps 0..t."""
+
+    def forward(self, x: torch.Tensor):
+        # input size: (Batch, Channel, Height, Width), H corresponds to time steps
+        B, C, H, W = x.size()
+        cum_sum = torch.cumsum(x.sum(dim=(1, 3), keepdim=True), dim=2)  # (B, 1, H, 1)
+        cum_pow_sum = torch.cumsum(x.pow(2).sum(dim=(1, 3), keepdim=True), dim=2)  # (B, 1, H, 1)
+        entry_cnt = torch.arange(1, H + 1, dtype=x.dtype, device=x.device).view(1, 1, -1, 1) * (C * W)
+
+        cum_mean = cum_sum / entry_cnt
+        cum_var = (cum_pow_sum / entry_cnt - cum_mean.pow(2)).clamp_min(0)
+        x = (x - cum_mean) / (cum_var + self.eps).sqrt()
+        # Reuse the GroupNorm affine parameters, so existing checkpoints load unchanged
+        return x * self.norm.weight.view(1, -1, 1, 1) + self.norm.bias.view(1, -1, 1, 1)
+
+
 class LayerNormalization4D(nn.Module):
     def __init__(self, input_dimension: Iterable, eps: float = EPS):
         super(LayerNormalization4D, self).__init__()
@@ -204,16 +221,16 @@ class CumulateLN4D(nn.Module):
 class LayerNormalizationHW(nn.Module):
     def __init__(self, num_channels, eps=1e-8):
         super(LayerNormalizationHW, self).__init__()
-        # GlobalLayerNorm for W dimension
-        self.global_layer_norm = GlobalLayerNorm(num_channels=num_channels, eps=eps)
+        # Causal GroupNorm over C and W (the attribute name keeps checkpoint keys unchanged)
+        self.global_layer_norm = CumulativeGroupNorm(num_channels=num_channels, eps=eps)
         # CumulateLN for H dimension
         self.cumulate_ln = CumulateLN4D(dimension=num_channels, eps=eps)
 
     def forward(self, x):
         # Input shape: (B, C, H, W)
 
-        # GlobalLayerNorm on W dimension
-        x = self.global_layer_norm(x)  # Normalizes over C and W dimensions
+        # Causal GroupNorm: statistics over C, W and the H steps up to the current one
+        x = self.global_layer_norm(x)
 
         # CumulateLN on H dimension
         x = self.cumulate_ln(x)  # (B, C, H, W) cumulative normalization on H
