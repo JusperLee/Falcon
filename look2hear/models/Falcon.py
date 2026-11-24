@@ -951,6 +951,7 @@ class VideoBlock(nn.Module):
                 input_size=self.hid_chan,
                 hidden_size=self.hid_chan,
                 bidirectional=False,
+                batch_first=True,
             )
         
         self.residual_conv = ConvNormAct(
